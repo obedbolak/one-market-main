@@ -21,6 +21,7 @@ interface Quarter {
 }
 
 interface QuarterFieldProps {
+  value?: string;
   label: string;
   onChangeText: (text: string, quarter?: Quarter) => void;
   helperText?: string;

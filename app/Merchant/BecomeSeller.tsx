@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CityField from "../components/CityField";
-import PaymentComponent from "../components/PaymentComponent";
 import PhoneField from "../components/PhoneField";
 import USSDInput from "../components/USSDInput";
 
@@ -333,55 +332,6 @@ const SendDataComponent = () => {
               clearButtonVisible={true}
             />
 
-            <View
-              style={{
-                marginVertical: 20,
-                backgroundColor: "#f0f0f0",
-                padding: 15,
-                borderRadius: 14,
-              }}
-            >
-              <View style={styles.buttonGroup}>
-                {amounts.map((amount) => (
-                  <TouchableOpacity
-                    key={amount.value}
-                    style={[
-                      styles.button,
-                      selectedAmount === amount.value && styles.selectedButton,
-                    ]}
-                    onPress={() => setSelectedAmount(amount.value)}
-                  >
-                    <Text
-                      style={[
-                        styles.amountText,
-                        selectedAmount === amount.value &&
-                          styles.selectedAmountText,
-                      ]}
-                    >
-                      {amount.value} CFA
-                    </Text>
-                    <Text
-                      style={[
-                        styles.pointsText,
-                        selectedAmount === amount.value &&
-                          styles.selectedPointsText,
-                      ]}
-                    >
-                      {amount.points} pts
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <PhoneField
-                label="Enter Your Momo Number"
-                placeholder="Enter your phone number"
-                value={momoPayNumber}
-                onChangeText={(text) => setMomoPayNumber(text)}
-                onClear={() => setMomoPayNumber("")}
-                helperText="Please enter a valid Momo number"
-                clearButtonVisible={true}
-              />
-
               {/* Terms and Conditions Radio Button */}
               <View style={styles.radioButtonContainer}>
                 <TouchableOpacity
@@ -409,88 +359,11 @@ const SendDataComponent = () => {
                     : "Read Terms and Conditions"}
                 </Text>
               </TouchableOpacity>
-              {/* <TouchableOpacity
-                onPress={handlePlans}
-                style={{
-                  backgroundColor: "#3b82f6", // nice blue
-                  paddingVertical: 12,
-                  paddingHorizontal: 24,
-                  borderRadius: 8,
-                  elevation: 3, // Android shadow
-                  shadowColor: "#000", // iOS shadow
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 4,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 16,
-                    fontWeight: "600",
-                    textAlign: "center",
-                  }}
-                >
-                  Payment Plans
-                </Text>
-              </TouchableOpacity> */}
-              {/* Render Terms and Conditions based on state */}
-              {showTerms && (
-                <View style={styles.termsContainer}>
-                  <Text style={styles.termsText}>Terms and Conditions</Text>
-                  <Text style={styles.termsBody}>
-                    {/* Add your full Terms and Conditions text here */}
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Integer nec odio. Praesent libero. Sed cursus ante dapibus
-                    diam.
-                    {/* ... More Terms */}
-                  </Text>
-                </View>
-              )}
-              <PaymentComponent
-                mobileMoneyNumber={momoPayNumber}
-                amount={selectedAmount || 1000}
-                userId={userProfile?._id || ""}
-                orderDescription="Payment for groceries"
-                onPaymentSuccess={async () => {
-                  console.log("Payment successful!");
-                  handlePlans();
-                  sendData();
-                  // Submit order or navigate to success screen
-                }}
-                onPaymentFailure={(error) => {
-                  Alert.alert("Payment Failed", "Please try again later.", [
-                    { text: "OK" },
-                  ]);
-                }}
-                maxPollingAttempts={15} // Wait up to 75 seconds (15 * 5s)
-                paymentMethod="mobile_money"
-                disabled={!isFormValid()}
-              />
 
-              {/* <TouchableOpacity
-                style={{
-                  backgroundColor: "#007bff",
-                  padding: 10,
-                  borderRadius: 5,
-                  marginTop: 10,
-                }}
-                onPress={() => {
-                  Alert.alert(
-                    "Payment",
-                    "Please send 1000 CFA to the number 675 123 456",
-                    [{ text: "OK" }]
-                  );
-                }}
-              >
-                <Text style={{ color: "#fff", textAlign: "center" }}>
-                  Make Payment
-                </Text>
-              </TouchableOpacity> */}
-            </View>
+            
 
             {/* Submit Button with TouchableOpacity and opacity change */}
-            {/* <TouchableOpacity
+            <TouchableOpacity
               style={[
                 styles.submitButton,
                 { opacity: isFormValid() ? 1 : 0.5 }, // Change opacity if form is not valid
@@ -498,8 +371,8 @@ const SendDataComponent = () => {
               onPress={sendData}
               disabled={!isFormValid()}
             >
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity> */}
+              <Text style={styles.submitButtonText}>Become a Seller</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       )}

@@ -21,8 +21,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Dropdown from "../components/Dropdown";
-import PaymentComponent from "../components/PaymentComponent";
-import PhoneField from "../components/PhoneField";
 import RealEstateSelector from "../components/RealEstateSelector";
 
 // Image interface
@@ -1570,26 +1568,7 @@ const AllServices: React.FC = () => {
                   </View>
                 </TouchableOpacity>
               </View>
-              <View style={{}}>
-                <Text style={styles.formLabel}>
-                  {newService.postType === newService.postType
-                    ? `${newService.postType} Address`
-                    : "Service Address"}
-                </Text>
-
-                <TextInput
-                  style={styles.input}
-                  placeholder={
-                    newService.postType !== ""
-                      ? "Enter Property Address"
-                      : "Enter service (etug-ebe round-about)"
-                  }
-                  value={newService.contactInfo}
-                  onChangeText={(text: string) =>
-                    setNewService({ ...newService, contactInfo: text })
-                  }
-                />
-              </View>
+              
               {createLocation && (
                 <View
                   style={{
@@ -1640,6 +1619,26 @@ const AllServices: React.FC = () => {
                 </View>
               )}
             </View>
+            <View style={{}}>
+                <Text style={styles.formLabel}>
+                  {newService.postType === newService.postType
+                    ? `${newService.postType} Address`
+                    : "Service Address"}
+                </Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder={
+                    newService.postType !== ""
+                      ? "Enter Property Address"
+                      : "Enter service (etug-ebe round-about)"
+                  }
+                  value={newService.contactInfo}
+                  onChangeText={(text: string) =>
+                    setNewService({ ...newService, contactInfo: text })
+                  }
+                />
+              </View>
             <Text style={styles.formLabel}> Email or Phone</Text>
             <TextInput
               style={styles.input}
@@ -1710,288 +1709,25 @@ const AllServices: React.FC = () => {
                   <>
                     {newService.postType !== "" ? (
                       <>
-                        <View
-                          style={{
-                            backgroundColor: "skyblue",
-                            marginTop: 10,
-                            padding: 10,
-                            borderRadius: 10,
-                            width: "100%",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontSize: 18,
-                              color: "white",
-                              fontWeight: "bold",
-                              marginBottom: 10,
-                            }}
-                          >
-                            Payment Method
-                          </Text>
-                          <PhoneField
-                            label="Enter Momo Number"
-                            helperText="Valid momo number"
-                            placeholder="Enter your phone number"
-                            value={momoNumber}
-                            onChangeText={(text) => setMomoNumber(text)}
-                            onFocus={() => setSelectedPayment("")}
-                            onBlur={() => {
-                              if (selectedPayment === "") {
-                                setSelectedPayment("");
-                              }
-                            }}
-                          />
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                              {getSubscriptionTitle()}
-                            </Text>
-                            <Text style={{ fontWeight: "bold", fontSize: 18 }}>
-                              {/* {getSubscriptionAmount()} */}
-                              {newService.name === "Real Estate"
-                                ? "Subscription     "
-                                : ""}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <PaymentComponent
-                          disabled={false}
-                          mobileMoneyNumber={momoNumber}
-                          amount={Number(getSubscriptionAmount()) || 0}
-                          userId={userProfile?._id || ""}
-                          orderDescription={getSubscriptionTitle()}
-                          onPaymentSuccess={async () => {
-                            console.log("Payment successful!");
-                            if (newService.postType !== "") {
-                              handleCreateProperty();
-                            } else {
-                              handleCreateService();
-                            }
-                          }}
-                          onPaymentFailure={(error) => {
-                            Alert.alert(
-                              "Payment Failed",
-                              "Please try again later.",
-                              [{ text: "OK" }]
-                            );
-                          }}
-                          maxPollingAttempts={15} // Wait up to 75 seconds (15 * 5s)
-                          paymentMethod="mobile_money"
-                        />
-
-                        {/* <TouchableOpacity
+                        <TouchableOpacity
                           style={styles.submitButton}
-                          onPress={handleCreateProperty}
+                          onPress={handleCreateProperty} // Directly call the property creation function
                         >
                           <Text style={styles.submitButtonText}>
                             Create Property
                           </Text>
-                        </TouchableOpacity> */}
+                        </TouchableOpacity>
                       </>
                     ) : (
                       <>
-                        {/* <View
-                          style={{
-                            backgroundColor: "skyblue",
-                            marginTop: 10,
-                            padding: 10,
-                            borderRadius: 10,
-                            width: "105%",
-                          }}
-                        >
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                              {getSubscriptionTitle()}
-                            </Text>
-                            <Text style={{ fontWeight: "bold", fontSize: 18 }}>
-                              {getSubscriptionAmount()}
-                            </Text>
-                          </View>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              gap: 10,
-                              marginTop: 12,
-                            }}
-                          >
-                            <TouchableOpacity
-                              style={{
-                                alignItems: "center",
-                                borderWidth: selectedPayment === "mtn" ? 2 : 0,
-                                borderColor: "white",
-                                borderRadius: 5,
-                              }}
-                              onPress={() => setSelectedPayment("mtn")}
-                            >
-                              <Image
-                                source={require("@/assets/images/prodimg/mtn.png")}
-                                style={{
-                                  width: selectedPayment === "mtn" ? 60 : 40,
-                                  height: selectedPayment === "mtn" ? 60 : 40,
-                                }}
-                              />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={{
-                                alignItems: "center",
-                                borderWidth:
-                                  selectedPayment === "orange" ? 2 : 0,
-                                borderColor: "white",
-                                borderRadius: 5,
-                              }}
-                              onPress={() => setSelectedPayment("orange")}
-                            >
-                              <Image
-                                source={require("@/assets/images/prodimg/orange.jpg")}
-                                style={{
-                                  width: selectedPayment === "orange" ? 60 : 40,
-                                  height:
-                                    selectedPayment === "orange" ? 60 : 40,
-                                }}
-                              />
-                            </TouchableOpacity>
-
-                            {selectedPayment === "mtn" && (
-                              <View style={{ marginLeft: "5%" }}>
-                                <Text
-                                  style={{
-                                    color: "white",
-                                    fontWeight: "bold",
-                                    fontSize: 18,
-                                  }}
-                                >
-                                  *236*14*6700088002*
-                                </Text>
-                                <Text
-                                  style={{
-                                    fontSize: 18,
-                                    color: "white",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  Amount#
-                                </Text>
-                                <Text
-                                  style={{
-                                    fontSize: 18,
-                                    color: "green",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  Ref: 1
-                                </Text>
-                              </View>
-                            )}
-
-                            {selectedPayment === "orange" && (
-                              <View style={{ marginLeft: "5%" }}>
-                                <Text
-                                  style={{
-                                    color: "white",
-                                    fontWeight: "bold",
-                                    fontSize: 18,
-                                  }}
-                                >
-                                  *236*14*9700000002*
-                                </Text>
-                                <Text
-                                  style={{
-                                    fontSize: 18,
-                                    color: "white",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  Amount#
-                                </Text>
-                                <Text
-                                  style={{
-                                    fontSize: 18,
-                                    color: "green",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  Ref: 1
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        </View> */}
-                        <Text
-                          style={{
-                            fontSize: 18,
-                            color: "white",
-                            fontWeight: "bold",
-                            marginBottom: 10,
-                          }}
-                        >
-                          Payment Method
-                        </Text>
-                        <PhoneField
-                          label="Enter Momo Number"
-                          helperText="Valid momo number"
-                          placeholder="Enter your phone number"
-                          value={momoNumber}
-                          onChangeText={(text) => setMomoNumber(text)}
-                          onFocus={() => setSelectedPayment("")}
-                          onBlur={() => {
-                            if (selectedPayment === "") {
-                              setSelectedPayment("");
-                            }
-                          }}
-                        />
-                        <Text
-                          style={{
-                            fontSize: 18,
-                            color: "orange",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          With {getSubscriptionTitle()}
-                        </Text>
-                        <PaymentComponent
-                          mobileMoneyNumber={momoNumber}
-                          amount={Number(getSubscriptionAmount()) || 0}
-                          userId={userProfile?._id || ""}
-                          orderDescription={getSubscriptionTitle()}
-                          onPaymentSuccess={async () => {
-                            console.log("Payment successful!");
-                            if (newService.postType !== "") {
-                              handleCreateProperty();
-                            } else {
-                              handleCreateService();
-                            }
-                          }}
-                          onPaymentFailure={(error) => {
-                            Alert.alert(
-                              "Payment Failed",
-                              "Please try again later.",
-                              [{ text: "OK" }]
-                            );
-                          }}
-                          maxPollingAttempts={15} // Wait up to 75 seconds (15 * 5s)
-                          paymentMethod="mobile_money"
-                        />
-
-                        {/* <TouchableOpacity
+                        <TouchableOpacity
                           style={styles.submitButton}
-                          onPress={}
+                          onPress={handleCreateService} // Directly call the service creation function
                         >
                           <Text style={styles.submitButtonText}>
                             Create Service
                           </Text>
-                        </TouchableOpacity> */}
+                        </TouchableOpacity>
                       </>
                     )}
                   </>
@@ -2011,7 +1747,6 @@ const AllServices: React.FC = () => {
                           })
                         }
                         style={{
-                          // button styling
                           padding: 10,
                           backgroundColor: "blue",
                           borderRadius: 7,
@@ -2021,23 +1756,6 @@ const AllServices: React.FC = () => {
                       >
                         <Text style={{ color: "white", fontWeight: "bold" }}>
                           Sign Up
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{
-                          // button styling
-                          padding: 10,
-                          backgroundColor: "gray",
-                          borderRadius: 7,
-                          width: "40%",
-                          alignItems: "center",
-                        }}
-                        disabled={true}
-                      >
-                        <Text
-                          style={{ color: "lightgray", fontWeight: "bold" }}
-                        >
-                          Create Service
                         </Text>
                       </TouchableOpacity>
                     </View>

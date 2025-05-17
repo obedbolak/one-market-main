@@ -1,8 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
+
+import { useProduct } from "@/context/ProductContext";
+
 import {
   Dimensions,
   Image,
@@ -17,6 +19,7 @@ import Banner from "../Main/Banner";
 import Footer from "../Main/Footer";
 import Header from "../Main/Header";
 import List from "../Main/List";
+
 
 interface ProductImage {
   public_id: string;
@@ -41,16 +44,18 @@ const SkeletonPlaceholder = ({ style }: { style: object }) => (
 );
 
 export default function HomeScreen() {
-  const [products, setProducts] = useState<Product[]>([]);
+  // const [products, setProducts] = useState<Product[]>([]);
   const [visibleProductCount, setVisibleProductCount] =
     useState(PRODUCTS_PER_PAGE);
   const { userProfile, getUserProfile, tokenAvailable } = useAuth();
+  const { products, loading } = useProduct();
+  const { categories } = useProduct();
+  const { orders } = useProduct();
   const [isModalVisible, setModalVisible] = useState(false);
   const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // Fetch user profile and set role on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -69,27 +74,27 @@ export default function HomeScreen() {
   }, []);
 
   // Fetch products on mount
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          "https://onemarketapi.xyz/api/v1/product/get-all"
-        );
-        const data = response.data;
-        if (data.success) {
-          setProducts(data.products);
-        } else {
-          console.error("Failed to fetch products");
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
+  // useEffect(() => {
+  //   const fetchProducts = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const response = await axios.get(
+  //         "https://onemarketapi.xyz/api/v1/product/get-all"
+  //       );
+  //       const data = response.data;
+  //       if (data.success) {
+  //         setProducts(data.products);
+  //       } else {
+  //         console.error("Failed to fetch products");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching products:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchProducts();
+  // }, []);
 
   const handleShowMore = () => {
     setVisibleProductCount((prev) =>
@@ -109,18 +114,7 @@ export default function HomeScreen() {
     setModalVisible(!isModalVisible);
   };
 
-  const handleOptionSelect = (option: string) => {
-    if (option === "createProduct") {
-      router.push("/Merchant/CreateProduct");
-    } else if (option === "viewOrders") {
-      router.push("/Merchant/ViewOrders");
-    } else if (option === "accountSettings") {
-      router.push("/Merchant/AccountSettings");
-    } else if (option === "Products") {
-      router.push("/Merchant/MyProduct");
-    }
-    setModalVisible(false);
-  };
+
 
   const handlesignup = () => {
     router.push({ pathname: "/(auth)/AuthScreen", params: { mode: "signup" } });
@@ -232,7 +226,7 @@ export default function HomeScreen() {
                     </View>
                   ))
                 : // Show actual products when loaded
-                  products.slice(0, visibleProductCount).map((product) => (
+                  (products as Product[]).slice(0, visibleProductCount).map((product) => (
                     <TouchableOpacity
                       key={product._id}
                       style={styles.productContainer}

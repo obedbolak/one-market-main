@@ -181,7 +181,7 @@ const Cart: React.FC = () => {
                 marginTop: 12,
               }}
             >
-              {userProfile?._id === "guest" ? (
+              {!userProfile?._id  ? (
                 <>
                   <TouchableOpacity
                     onPress={handleClearCart}

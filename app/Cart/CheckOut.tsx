@@ -72,7 +72,7 @@ interface OrderSubmissionData {
   paymentInfo: OrderPaymentInfo;
   itemPrice: number;
   tax: number;
-  Uid: string;
+  Uid: string | undefined;
   shippingCharges: number;
   totalAmount: number;
 }
@@ -108,21 +108,31 @@ const CheckOut: React.FC = () => {
   const MAX_POLLING_ATTEMPTS = 12;
   const [paymentState, setPaymentState] = useState<PaymentStatus>("idle");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+    const [loading, setLoading] = useState(true);
+  
   // Fetch user profile when the component is mounted
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        await getUserProfile();
-      } catch (error) {
-        console.error("Failed to fetch user profile:", error);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  if (!userProfile) {
-    return <Text>Loading profile...</Text>;
-  }
+  // Initialize form with user data
+   useEffect(() => {
+     const loadProfile = async () => {
+       try {
+         await getUserProfile();
+         setLoading(false);
+       } catch (error) {
+         console.error("Failed to load profile:", error);
+         setLoading(false);
+       }
+     };
+ 
+     loadProfile();
+   }, []);
+ 
+   // Update form when userProfile changes
+   useEffect(() => {
+     if (userProfile) {
+       
+       
+     }
+   }, [userProfile]);
   const prepareOrderData = (): OrderSubmissionData => {
     const itemPrice = cartItems.reduce(
       (total: number, item: CartItem) => total + item.price * item.quantity,
@@ -367,7 +377,7 @@ const CheckOut: React.FC = () => {
   }, [pollingInterval]);
 
   const url = "https://onemarketapi.xyz/api/twilio/send-sms";
-  const userPhone = userProfile.phone.includes("+") ? userProfile.phone : "";
+  const userPhone = userProfile?.phone.includes("+") ? userProfile.phone : "";
 
   const sendSMS = async () => {
     try {
@@ -428,24 +438,14 @@ const CheckOut: React.FC = () => {
                       setShippingInfo({ ...shippingInfo, address: text })
                     }
                     placeholder="Enter Phone Number"
-                    keyboardType="phone-pad"
                     helperText="Please enter your Phone Number"
                     onClear={() =>
                       setShippingInfo({ ...shippingInfo, address: "" })
                     }
                     clearButtonVisible={!!shippingInfo.address}
-                    isInvalid={!shippingInfo.address}
-                    onFocus={() =>
-                      setShippingInfo({ ...shippingInfo, address: "" })
-                    }
-                    onBlur={() =>
-                      setShippingInfo({ ...shippingInfo, address: "" })
-                    }
-                    countryCode="237"
-                    selectedCountry={{
-                      name: "Cameroon",
-                      dialCode: "237",
-                    }}
+                    
+                    
+                
                   />
 
                   <CityField
@@ -455,12 +455,11 @@ const CheckOut: React.FC = () => {
                     onChangeText={(text) =>
                       setShippingInfo({ ...shippingInfo, city: text })
                     }
-                    onFocus={() => setCitySelect(!citySelect)}
                     onClear={() =>
                       setShippingInfo({ ...shippingInfo, city: "" })
                     }
                     clearButtonVisible={!!shippingInfo.city}
-                    isInvalid={!shippingInfo.city}
+                    settoggleBranch={setCitySelect}
                   />
 
                   <QuarterField
@@ -469,12 +468,10 @@ const CheckOut: React.FC = () => {
                     onChangeText={(text) =>
                       setShippingInfo({ ...shippingInfo, postalCode: text })
                     }
-                    onFocus={() => setCitySelect(!citySelect)}
                     onClear={() =>
                       setShippingInfo({ ...shippingInfo, postalCode: "" })
                     }
                     clearButtonVisible={!!shippingInfo.postalCode}
-                    isInvalid={!shippingInfo.postalCode}
                     label="Enter Quarter"
                   />
 
@@ -597,23 +594,11 @@ const CheckOut: React.FC = () => {
                           value={mobileMoneyNumber}
                           onChangeText={setMobileMoneyNumber}
                           placeholder="Enter your Orange Number"
-                          keyboardType="phone-pad"
                           helperText="Please enter your Orange Number"
                           onClear={() => setMobileMoneyNumber("")}
                           clearButtonVisible={!!mobileMoneyNumber}
-                          isInvalid={!mobileMoneyNumber}
-                          onFocus={() => setMobileMoneyNumber("")}
-                          onBlur={() => setMobileMoneyNumber("")}
-                          countryCode="237"
-                          selectedCountry={{
-                            name: "Cameroon",
-                            dialCode: "237",
-                          }}
-                          onCountrySelect={(country) =>
-                            setMobileMoneyNumber(
-                              `${country.dialCode}${mobileMoneyNumber}`
-                            )
-                          }
+                         
+                          
                         />
                       )}
                       {mobileMoneyPaymentMethod === "MTN" && (
@@ -622,26 +607,11 @@ const CheckOut: React.FC = () => {
                           value={mobileMoneyNumber}
                           onChangeText={setMobileMoneyNumber}
                           placeholder="Enter your MTN number"
-                          keyboardType="phone-pad"
                           helperText="Please enter your MTN number"
                           onClear={() => setMobileMoneyNumber("")}
                           clearButtonVisible={!!mobileMoneyNumber}
-                          isInvalid={!mobileMoneyNumber}
-                          onFocus={() => setMobileMoneyNumber("")}
-                          onBlur={() => setMobileMoneyNumber("")}
-                          countryCode="237"
-                          selectedCountry={{
-                            name: "Cameroon",
-                            dialCode: "237",
-                          }}
-                          onCountrySelect={(country) =>
-                            setMobileMoneyNumber(
-                              `${country.dialCode.replace(
-                                "+",
-                                ""
-                              )}${mobileMoneyNumber}`
-                            )
-                          }
+                         
+                          
                         />
                       )}
                     </View>

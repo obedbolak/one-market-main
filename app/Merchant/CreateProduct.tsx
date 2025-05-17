@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -71,7 +72,8 @@ const NEW_ARRIVALS: Item[] = [
 ];
 
 const CreateProduct: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
+const{categories} = useProduct()
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [category, setCategory] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -89,25 +91,25 @@ const CreateProduct: React.FC = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [currentProductCount, setCurrentProductCount] = useState<number>(0);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(
-          "https://onemarketapi.xyz/api/v1/cat/get-all"
-        );
-        const data = await response.json();
-        if (data.success) {
-          setCategories(data.categories);
-        } else {
-          console.error("Failed to fetch categories:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         "https://onemarketapi.xyz/api/v1/cat/get-all"
+  //       );
+  //       const data = await response.json();
+  //       if (data.success) {
+  //         setCategories(data.categories);
+  //       } else {
+  //         console.error("Failed to fetch categories:", data.message);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching categories:", error);
+  //     }
+  //   };
 
-    fetchCategories();
-  }, []);
+  //   fetchCategories();
+  // }, []);
 
   const handleCategorySelect = (category: Category) => {
     setSelectedCategory(category.category);

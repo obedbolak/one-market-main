@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/context/AuthContext";
+import { ProductProvider } from "@/context/ProductContext";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -27,8 +28,9 @@ export default function RootLayout() {
   }
 
   return (
+  <ProductProvider>
     <AuthProvider>
-      <Provider store={store}>
+   <Provider store={store}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
@@ -95,6 +97,8 @@ export default function RootLayout() {
         </Stack>
         <StatusBar style="dark" />
       </Provider>
-    </AuthProvider>
+    </AuthProvider>      
+    </ProductProvider>
+
   );
 }

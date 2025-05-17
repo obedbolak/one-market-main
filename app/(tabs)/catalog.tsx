@@ -132,7 +132,8 @@ const Catalog: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {sortedCategories.map((category) => (
           <View key={category}>
-            <Text style={styles.categoryTitle}>{category}</Text>
+            <TouchableOpacity><Text style={styles.categoryTitle}>{category}</Text></TouchableOpacity>
+            
             <View style={styles.categoryContainer}>
               {categorizedProducts[category].map(renderProductItem)}
             </View>

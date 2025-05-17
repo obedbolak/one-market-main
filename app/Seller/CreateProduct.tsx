@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useProduct } from "@/context/ProductContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
@@ -39,7 +40,8 @@ const CreateProduct = () => {
   const [token, setToken] = useState<string | null>(null);
 
   const [category, setCategory] = useState<string>("");
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
+  const {categories} = useProduct();
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -55,25 +57,25 @@ const CreateProduct = () => {
     setImages([]);
   };
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(
-          "https://onemarketapi.xyz/api/v1/cat/get-all"
-        );
-        const data = await response.json();
-        if (data.success) {
-          setCategories(data.categories);
-        } else {
-          console.error("Failed to fetch categories:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         "https://onemarketapi.xyz/api/v1/cat/get-all"
+  //       );
+  //       const data = await response.json();
+  //       if (data.success) {
+  //         setCategories(data.categories);
+  //       } else {
+  //         console.error("Failed to fetch categories:", data.message);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching categories:", error);
+  //     }
+  //   };
 
-    fetchCategories();
-  }, []);
+  //   fetchCategories();
+  // }, []);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -194,6 +196,11 @@ const CreateProduct = () => {
   };
 
   const handleSuccessfulSubmission = () => {
+    //clear all fields
+    setProductData(initialProductData);
+    setSelectedProduct(null);
+    setImages([]);
+
     console.log("Product created successfully!");
   };
 
@@ -375,16 +382,35 @@ const CreateProduct = () => {
               )}
             </View>
             <TouchableOpacity
-              onPress={handleSubmit}
+              onPress={() => {
+                if (productData.name === "" || images.length === 0) {
+                  const emptyFields = [];
+                  if (productData.name === "") emptyFields.push("Product Name");
+                  if (images.length === 0) emptyFields.push("Images");
+
+                  Alert.alert(
+                    "Missing Fields",
+                    `Please fill in the following fields:\n- ${emptyFields.join("\n- ")}`
+                  );
+                } else {
+                  handleSubmit();
+                }
+              }}
               style={{
                 marginTop: 20,
                 padding: 15,
-                backgroundColor: "#1e90ff",
+                backgroundColor:
+                  productData.name === "" || images.length === 0 ? "gray" : "#1e90ff",
                 borderRadius: 8,
               }}
+              disabled={productData.name === "" || images.length === 0}
             >
               <Text
-                style={{ textAlign: "center", color: "#fff", fontSize: 16 }}
+                style={{
+                  textAlign: "center",
+                  color: "#fff",
+                  fontSize: 16,
+                }}
               >
                 Create Product
               </Text>

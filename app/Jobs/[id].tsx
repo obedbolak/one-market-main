@@ -6,7 +6,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -16,11 +15,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PaymentComponent from "../components/PaymentComponent";
-import PhoneField from "../components/PhoneField";
 import ResponsiveComponent from "./Details";
 
 interface Images {
@@ -493,7 +490,7 @@ const JobDetails = () => {
                 )}
                 {renderImagePreviews()}
               </View>
-              <Text style={styles.imageHelperText}>
+              {/* <Text style={styles.imageHelperText}>
                 a payment of 1000 XAF is required to post a job
               </Text>
               <View>
@@ -526,8 +523,8 @@ const JobDetails = () => {
                   maxPollingAttempts={15} // Wait up to 75 seconds (15 * 5s)
                   paymentMethod="mobile_money"
                 />
-              </View>
-              {/* <TouchableOpacity
+              </View> */}
+               <TouchableOpacity
               style={styles.submitButton}
               onPress={() => {
                 submitFormData();
@@ -540,7 +537,7 @@ const JobDetails = () => {
               ) : (
                 <Text style={styles.submitButtonText}>Create Job</Text>
               )}
-            </TouchableOpacity> */}
+            </TouchableOpacity> 
             </View>
           </ScrollView>
         );

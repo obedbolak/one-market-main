@@ -343,17 +343,10 @@ const Header: React.FC = () => {
     }
   }, [userProfile?._id, isConnected]);
 
-  const fetchMessages = useCallback(async () => {
-    try {
-      // Remove previous fetch logic for messages
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
-  }, [userProfile?._id]);
+ 
 
   const fetchOrders = async (): Promise<void> => {
     if (!userProfile?._id) {
-      console.error("User profile is not available.");
       return;
     }
 
@@ -786,12 +779,15 @@ const Header: React.FC = () => {
                 </>
               ) : (
                 <>
-                  {orders.length > 0 ? (
+                  {userOrders.length > 0 ? (
                     <FlatList
                       data={userOrders}
                       keyExtractor={(item: Order) => item._id}
                       renderItem={({ item }) => (
                         <View style={styles.orderContainer}>
+                          <Text style={{color: "green", fontSize: 16, marginBottom: 10, fontWeight: "bold"}}>
+                            Your have placed {userOrders.length === 1 ? "an" : `${userOrders.length}`} order{userOrders.length > 1 ? "s" : ""}
+                          </Text>
                           <Text style={styles.orderTitle}>
                             Order ID: {item._id}
                           </Text>
@@ -845,13 +841,7 @@ const Header: React.FC = () => {
                               </Text>
                             </TouchableOpacity>
                           )}
-                        </View>
-                      )}
-                      ListEmptyComponent={
-                        <View style={styles.noMessagesContainer}>
-                          <Text style={styles.noMessagesText}>
-                            You didn't Order Anything Recently
-                          </Text>
+
                           {orders.length > 0 && (
                             <TouchableOpacity
                               style={styles.viewOrdersButton}
@@ -867,6 +857,12 @@ const Header: React.FC = () => {
                               />
                             </TouchableOpacity>
                           )}
+                        </View>
+                      )}
+                      ListEmptyComponent={
+                        <View style={styles.noMessagesContainer}>
+                          
+                          
                         </View>
                       }
                       showsVerticalScrollIndicator={false}

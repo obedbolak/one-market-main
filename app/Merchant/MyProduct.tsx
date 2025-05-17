@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
@@ -31,84 +32,54 @@ interface Item {
   _id: string;
 }
 
-const MyProduct = ({
-  onProductCountChange,
-}: {
+interface MyProductProps {
   onProductCountChange: (count: number) => void;
-}) => {
-  const [products, setProducts] = useState<Item[]>([]);
+}
+
+const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
   const { userProfile } = useAuth();
+  const { products } = useProduct();
+  const [filteredProducts, setFilteredProducts] = useState<Item[]>([]);
   const [upgrade, setUpgrade] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string>("mtn");
   const [plan, setPlan] = useState<number>();
   const [boost, setBoost] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Item>();
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [boostedValue, setBoostValue] = useState<string>("");
-  const [selectedAmount, setSelectedAmount] = React.useState<number | null>(
-    1000
-  );
-  const [momoPayNumber, setMomoPayNumber] = useState("");
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
+  const [momoPayNumber, setMomoPayNumber] = useState<string>("");
 
   useEffect(() => {
     onProductCountChange(products.length);
-  }, [products]);
+  }, [products, onProductCountChange]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch(
-          "https://onemarketapi.xyz/api/v1/product/get-all"
-        );
-        const data = await response.json();
-        if (data.success) {
-          const filteredProducts = data.products.filter(
-            (product: Item) => product.sellerId === userProfile?._id
-          );
-          setProducts(filteredProducts);
-        } else {
-          console.error("Failed to fetch products");
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
-
-    fetchProducts();
-  }, [userProfile?._id]);
-
-  const isPlanDisabled = (planNumber: number) => {
+    if (products.length > 0 && userProfile?._id) {
+      const filtered = products.filter(
+        (product: Item) => product.sellerId === userProfile._id
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+  }, [products, userProfile?._id]);
+  
+  const isPlanDisabled = (planNumber: number): boolean => {
     return userProfile?.productPayments === planNumber;
   };
 
-  // Helper function to split products into chunks of 2 for the grid
-  const chunkArray = (array: Item[], chunkSize: number) => {
-    const result = [];
+  const chunkArray = (array: Item[], chunkSize: number): Item[][] => {
+    const result: Item[][] = [];
     for (let i = 0; i < array.length; i += chunkSize) {
       result.push(array.slice(i, i + chunkSize));
     }
     return result;
   };
 
-  const productChunks = chunkArray(products, 2);
+  const productChunks = chunkArray(filteredProducts.length > 0 ? filteredProducts : products, 2);
 
   return (
     <>
-      {/* <TouchableOpacity
-        onPress={() => router.push("/Merchant/CreateProduct")}
-        style={{
-          alignItems: "center",
-          position: "absolute",
-          top: "98%",
-          right: 20,
-          zIndex: 1,
-          backgroundColor: "white",
-          borderRadius: 50,
-          padding: 10,
-        }}
-      >
-        <Ionicons name="add-circle" size={50} color="black" />
-      </TouchableOpacity> */}
-
       <View
         style={{
           alignItems: "center",
@@ -141,18 +112,6 @@ const MyProduct = ({
             <Text style={{ color: "green", fontWeight: "bold" }}> 100 </Text>
           )}
         </Text>
-
-        {/* <TouchableOpacity
-          onPress={() => setUpgrade(!upgrade)}
-          style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
-        >
-          <Text style={{ color: "skyblue", fontWeight: "bold" }}>Upgrade</Text>
-          <Ionicons
-            name={upgrade ? "chevron-down" : "chevron-forward"}
-            size={15}
-            color="black"
-          />
-        </TouchableOpacity> */}
       </View>
 
       {boost ? (
@@ -181,10 +140,9 @@ const MyProduct = ({
                 backgroundColor: "rgba(135, 206, 235, 0.1)",
                 marginBottom: 20,
               }}
-              onChange={(event) => {
-                const inputValue = event.nativeEvent.text;
-                if (inputValue === "" || /^\d*\.?\d*$/.test(inputValue)) {
-                  setBoostValue(inputValue);
+              onChangeText={(text: string) => {
+                if (text === "" || /^\d*\.?\d*$/.test(text)) {
+                  setBoostValue(text);
                 }
               }}
             />
@@ -193,13 +151,10 @@ const MyProduct = ({
               label="Enter Momo Number"
               placeholder="Enter your phone number"
               value={momoPayNumber}
-              onChangeText={(text) => setMomoPayNumber(text)}
+              onChangeText={(text: string) => setMomoPayNumber(text)}
               onClear={() => setMomoPayNumber("")}
-              // Removed the style prop as PhoneField does not support it
               helperText="Please enter a valid Momo number"
-              // Removed isInvalid as it is not a valid prop for PhoneField
               clearButtonVisible={true}
-              // Removed isFocused as it is not a valid prop for PhoneField
             />
             <PaymentComponent
               mobileMoneyNumber={momoPayNumber}
@@ -208,15 +163,13 @@ const MyProduct = ({
               orderDescription="Payment for groceries"
               onPaymentSuccess={async () => {
                 console.log("Payment successful!");
-
-                // Submit order or navigate to success screen
               }}
-              onPaymentFailure={(error) => {
+              onPaymentFailure={(error: any) => {
                 Alert.alert("Payment Failed", "Please try again later.", [
                   { text: "OK" },
                 ]);
               }}
-              maxPollingAttempts={15} // Wait up to 75 seconds (15 * 5s)
+              maxPollingAttempts={15}
               paymentMethod="mobile_money"
               disabled={momoPayNumber.length <= 12}
             />
@@ -236,7 +189,7 @@ const MyProduct = ({
                   }}
                 >
                   <Image
-                    source={{ uri: item.images[0].url }}
+                    source={{ uri: item.images[0]?.url }}
                     style={{ width: "100%", height: 100 }}
                     resizeMode="contain"
                   />
