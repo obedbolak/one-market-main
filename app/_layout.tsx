@@ -88,10 +88,7 @@ export default function RootLayout() {
             name="LostItem/LostItem"
             options={{ headerShown: false }}
           />
-          <Stack.Screen
-            name="(auth)/ForgotPassword"
-            options={{ headerShown: false }}
-          />
+          
 
           <Stack.Screen name="+not-found" />
         </Stack>

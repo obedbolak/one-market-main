@@ -25,6 +25,7 @@ import PhoneField from "../components/PhoneField";
 // Import auth context
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import { TextInput } from "react-native-paper";
 import OTPField from "../components/OTPField";
 
 const AuthScreen = () => {
@@ -35,6 +36,7 @@ const AuthScreen = () => {
   const [error, setError] = useState("");
   const [storedOtp, setStoredOtp] = useState("666666");
   const [isFormValid, setIsFormValid] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   // Auth context
   const { signin, signUp } = useAuth();
@@ -45,6 +47,7 @@ const AuthScreen = () => {
   const [otpstate, setOtpState] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [validOtp, setValidOtp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   // Form states
   const [email, setEmail] = useState("");
@@ -53,6 +56,7 @@ const AuthScreen = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isScrollEnabled, setIsScrollEnabled] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Predefined business details
   const businessDetails = {
@@ -80,20 +84,29 @@ const AuthScreen = () => {
 
   const validateForm = () => {
     if (isSignIn) {
-      const isValid = (email.trim() || phone.trim()) && password.trim();
+      const isValid = (phone.trim()) && password.trim();
       setIsFormValid(isValid);
     } else {
       const isValid = 
         name.trim() && 
         password.trim() && 
-        (email.trim() || phone.trim());
+         phone.trim();
       setIsFormValid(isValid);
     }
   };
 
   useEffect(() => {
     validateForm();
-  }, [name, email, phone, password, isSignIn, isEmailMode]);
+  }, [name, phone, password, isSignIn]);
+
+  const validatePasswords = () => {
+    if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match");
+      return false;
+    }
+    setConfirmPasswordError("");
+    return true;
+  };
 
   const handleAuthentication = async () => {
     if (!isFormValid) return;
@@ -104,13 +117,10 @@ const AuthScreen = () => {
       setStoredOtp(otp.toString());
       
       if (isSignIn) {
-        const loginId = isEmailMode ? email : phone;
+        const loginId = phone;
         await signin(loginId, password);
       } else {
-        const signUpEmail = isEmailMode
-          ? email
-          : `${generateRandomPhone()}@example.com`;
-        const signUpPhone = isEmailMode ? generateRandomPhone() : phone;
+        const signUpEmail =  `${generateRandomPhone()}@example.com`;
 
         await signUp(
           name,
@@ -118,7 +128,7 @@ const AuthScreen = () => {
           password,
           businessDetails.city,
           businessDetails.address,
-          signUpPhone,
+          phone,
           businessDetails.answer,
           businessDetails.country,
           businessDetails.storeName,
@@ -180,6 +190,41 @@ const AuthScreen = () => {
     Alert.alert("New OTP Sent", "Check your device for the new code");
   };
 
+   const resetPassword = async () => {
+      const url =
+        "https://onemarketapi.xyz/api/v1/user/password/reset";
+      const data = {
+        phone: phone,
+        newPassword: confirmPassword,
+       
+      };
+  
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+  
+        const result = await response.json();
+        console.log(result, phone, confirmPassword);
+        if (response.ok) {
+          Alert.alert("Success", "Password reset successful!");
+          setPassword("");          
+          setIsForgotPassword(false);
+
+          setIsSignIn(true);
+        } else {
+          Alert.alert("Error", result.message || "Something went wrong.");
+        }
+      } catch (error) {
+        Alert.alert("Error");
+      }
+    };
+  
+
   const handleCodeChanged = (code: string) => {
     setOtp(code);
     if (error && code.length === 6) {
@@ -232,6 +277,68 @@ const AuthScreen = () => {
               style={styles.image}
             />
 
+            {isForgotPassword ? (<>
+            <Text style={styles.title}>Forgot Password</Text>
+            <Text style={styles.title}>
+              Enter your Phone number to reset your password
+            </Text>
+
+            <PhoneField
+              label="Phone"
+              placeholder="Enter your phone number"
+              helperText="Enter your phone number used to register" 
+              value={phone}
+              onChangeText={setPhone}
+            />
+            <TextInput
+              label="New Password"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                // Validate as user types
+                if (confirmPassword.length > 0) validatePasswords();
+              }}
+              keyboardType="default"
+              secureTextEntry={true}
+              style={{ marginBottom: 10 }}
+            />
+            <TextInput
+              label="Confirm Password"
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                validatePasswords();
+              }}
+              keyboardType="default"
+              secureTextEntry={true}
+              
+              style={{ marginBottom: 10 }}
+            />
+            {confirmPassword.length > 0  && password === confirmPassword ? (
+  <Text style={{ color: "green", marginBottom: 10 }}>Password correct</Text>
+) : null}
+{confirmPassword.length > 0 && confirmPasswordError && password !== confirmPassword? (
+  <Text style={{ color: "red", marginBottom: 10 }}>{confirmPasswordError}</Text>
+) :null}
+            <TouchableOpacity
+              onPress={() => {
+                resetPassword();
+                
+              }
+              }
+              style={{
+                marginBottom: 10,
+                alignSelf: "center",
+                backgroundColor: "blue",
+                padding: 10,
+                borderRadius: 5,
+              }}  
+            >
+              <Text style={{ color: "white" }}>Reset Password</Text>
+            </TouchableOpacity>
+
+            </>):
+(<>
             {isSignIn && otpstate ? (
               <>
                 <OTPField
@@ -288,7 +395,7 @@ const AuthScreen = () => {
                   onChangeText={setPassword}
                 />
                 
-                <View style={styles.toggleInfoContainer}>
+                {/* <View style={styles.toggleInfoContainer}>
                   <Text>
                     {isSignIn
                       ? `Sign In with ${isEmailMode ? "Phone" : "Email"}`
@@ -317,7 +424,7 @@ const AuthScreen = () => {
                   >
                     <Text style={styles.toggleButtonText}>Phone</Text>
                   </TouchableOpacity>
-                </View>
+                </View> */}
                 
                 <CustomButton 
                   theme="primary" 
@@ -339,7 +446,7 @@ const AuthScreen = () => {
                 </CustomButton>
               </>
             )}
-
+</>)}
             {validOtp && (
               <CustomButton 
                 theme="primary" 
@@ -370,6 +477,21 @@ const AuthScreen = () => {
               <TouchableOpacity onPress={() => setIsSignIn(!isSignIn)}>
                 <Text style={styles.link}>
                   {isSignIn ? "Sign Up" : "Sign In"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <TouchableOpacity
+                onPress={() => setIsForgotPassword(!isForgotPassword)}
+                style={{
+                  marginBottom: 10,
+                  alignSelf: "center",
+                }}
+              >
+                <Text style={styles.link}>
+                  {isForgotPassword
+                    ? "Back to Sign In"
+                    : "Forgot Password?"}
                 </Text>
               </TouchableOpacity>
             </View>
