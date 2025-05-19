@@ -64,13 +64,22 @@ const ProductDetails = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  const [messagews, setMessagews] = useState("");
+    const [messagesws, setMessagesws] = useState<
+      { content: string; userId: string }[]
+    >([]);
+    const [roomId, setRoomId] = useState<string>("");
   
   // WebSocket
   const ws = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const roomId = selectedProduct && userProfile 
-    ? `${selectedProduct._id}_${userProfile._id}_${selectedProduct.sellerId}`
-    : "";
+  const [formattedMessages, setFormattedMessages] = useState<
+    { content: string; timestamp: string; userId: string }[]
+  >([]);
+  // const roomId = selectedProduct && userProfile 
+  //   ? `${selectedProduct._id}_${userProfile._id}_${selectedProduct.sellerId}`
+  //   : "";
 
   // Fetch products on mount
   // useEffect(() => {
@@ -112,6 +121,8 @@ const ProductDetails = () => {
       setRelatedProducts(related);
     }
   }, [selectedProduct, products]);
+  const userId = userProfile?._id || "guest";
+
 
   // Handle chat modal from URL param
   useEffect(() => {
@@ -120,88 +131,206 @@ const ProductDetails = () => {
     }
   }, [model]);
 
-  // WebSocket connection management
-  useEffect(() => {
-    if (!roomId || !userProfile) return;
+  // Connect to WebSocket server
+  const connectWebSocket = () => {
+    if (ws.current) {
+      ws.current.close(); // Close any existing connection before creating a new one
+    }
 
-    const connect = () => {
-      ws.current = new WebSocket("wss://onemarketapi.xyz/api/v1");
+    ws.current = new WebSocket("wss://onemarketapi.xyz/api/v1");
 
-      ws.current.onopen = () => {
-        setIsConnected(true);
-        joinRoom();
-        fetchMessages();
-      };
-
-      ws.current.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        if (data.type === "chat") {
-          handleNewMessage(data);
-        }
-      };
-
-      ws.current.onclose = () => {
-        setIsConnected(false);
-      };
-
-      ws.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
+    ws.current.onopen = () => {
+      console.log("Connected to WebSocket server");
+      setIsConnected(true);
+      joinRoom();
     };
 
-    connect();
+    ws.current.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
 
+        if (data.type === "fetched_messages") {
+          const messages = data.messages;
+
+          setFormattedMessages(
+            messages.map(
+              (msg: {
+                content: string;
+                timestamp: string;
+                userId: string;
+              }) => ({
+                content: msg.content,
+                timestamp: new Date(msg.timestamp).toLocaleTimeString(),
+                userId: msg.userId,
+              })
+            )
+          );
+          setMessagesws(data.messages);
+        } else if (data.type === "chat") {
+          setMessagesws((prev) => [
+            ...prev,
+            { content: data.content, userId: data.userId },
+          ]);
+        } else if (data.type === "error") {
+          alert(data.message);
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+
+    ws.current.onerror = (e) => {
+      console.error("WebSocket error:", e);
+    };
+
+    ws.current.onclose = (e) => {
+      console.warn("WebSocket disconnected:", e.code, e.reason);
+      setIsConnected(false);
+    };
+  };
+
+  // Clean up WebSocket connection on unmount
+  useEffect(() => {
+    return () => {
+      if (ws.current) {
+        console.log("Closing WebSocket connection");
+        ws.current.onclose = null; // Prevent triggering the reconnect logic
+        ws.current.close();
+      }
+    };
+  }, []);
+
+  // Join a room
+  const joinRoom = () => {
+    if (!userId || !roomId) {
+      alert("Please enter both user ID and room ID");
+      return;
+    }
+
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      // Send a "join" request to the WebSocket server
+      ws.current.send(
+        JSON.stringify({
+          type: "join",
+          userId,
+          roomId,
+          name: selectedProduct?.images[0]?.url,
+        })
+      );
+
+      console.log(`Joined room: ${roomId}`);
+
+      // Fetch messages from the room after joining
+      fetchMessagesws();
+    } else {
+      console.error("WebSocket is not open. Cannot join room.");
+    }
+  };
+
+  // Fetch messages from the room
+  const fetchMessagesws = () => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(
+        JSON.stringify({
+          type: "fetch_messages",
+          roomId, // Make sure `roomId` is defined at this point
+        })
+      );
+    } else {
+      console.error("WebSocket is not open. Cannot fetch messages.");
+    }
+  };
+  // Send a chat message
+  const sendMessagews = () => {
+    if (!messageInput.trim()) return;
+
+    const sendMessage = () => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        const newMessage = {
+          content: messageInput,
+          userId,
+          roomId,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send the message to the WebSocket server
+        ws.current.send(
+          JSON.stringify({
+            type: "chat",
+            ...newMessage,
+          })
+        );
+
+        // Update the chat on the screen immediately
+        setFormattedMessages((prev) => [
+          ...prev,
+          {
+            content: newMessage.content,
+            timestamp: new Date(newMessage.timestamp).toLocaleTimeString(),
+            userId: newMessage.userId,
+          },
+        ]);
+
+        setMessagesws((prev) => [...prev, newMessage]);
+
+        // Clear the input field
+        setMessageInput("");
+      } else {
+        console.error("WebSocket is not open. Message not sent.");
+      }
+    };
+
+    // If disconnected, reconnect and send the message after connection is established
+    if (
+      !isConnected ||
+      !ws.current ||
+      ws.current.readyState !== WebSocket.OPEN
+    ) {
+      console.log("WebSocket is disconnected. Reconnecting...");
+      connectWebSocket();
+
+      // Wait for the connection to be established before sending the message
+      const interval = setInterval(() => {
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          clearInterval(interval);
+          sendMessage();
+        }
+      }, 100); // Check every 100ms
+    } else {
+      // If already connected, send the message immediately
+      sendMessage();
+    }
+  };
+
+  // Clean up WebSocket connection on unmount
+  useEffect(() => {
     return () => {
       if (ws.current) {
         ws.current.close();
       }
     };
-  }, [roomId, userProfile]);
+  }, []);
 
-  const joinRoom = () => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({
-        type: "join",
-        roomId,
-        userId: userProfile?._id
-      }));
+  // Set roomId when selectedProduct and userProfile are available
+  useEffect(() => {
+    if (selectedProduct && userProfile) {
+      const newRoomId = `${selectedProduct._id}_${userProfile._id}_${selectedProduct.sellerId}`;
+      setRoomId(newRoomId);
+      console.log(`Room ID set: ${newRoomId}`);
     }
-  };
+  }, [selectedProduct, userProfile]);
 
-  const fetchMessages = () => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({
-        type: "fetch_messages",
-        roomId
-      }));
-    }
-  };
+  useEffect(() => {
+    const fetchInterval = setInterval(() => {
+      if (roomId && ws.current?.readyState === WebSocket.OPEN) {
+        fetchMessagesws();
+      }
+    }, 5000); // 5 seconds
 
-  const handleNewMessage = (message: any) => {
-    setMessages(prev => [...prev, {
-      content: message.content,
-      userId: message.userId,
-      timestamp: new Date().toLocaleTimeString(),
-      isFromCurrentUser: message.userId === userProfile?._id
-    }]);
-  };
+    return () => clearInterval(fetchInterval);
+  }, [roomId]);
 
-  const sendMessage = () => {
-    if (!messageInput.trim() || !ws.current || !roomId || !userProfile) return;
 
-    const message = {
-      type: "chat",
-      content: messageInput,
-      roomId,
-      userId: userProfile._id,
-      timestamp: new Date().toISOString()
-    };
-
-    if (ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(message));
-      setMessageInput("");
-    }
-  };
 
   // Product quantity handlers
   const adjustQuantity = (amount: number) => {
@@ -344,7 +473,9 @@ const ProductDetails = () => {
       {/* Chat Button (only show if not seller) */}
       {userProfile && userProfile._id !== selectedProduct.sellerId && (
         <TouchableOpacity
-          onPress={() => setChatModal(true)}
+          onPress={() => {setChatModal(true)
+            connectWebSocket();
+          }}
           style={styles.chatButton}
         >
           <Ionicons name="chatbubble-ellipses" size={24} color="white" />
@@ -368,18 +499,58 @@ const ProductDetails = () => {
             </View>
 
             <ScrollView style={styles.chatContainer}>
-              {messages.map((msg, index) => (
-                <View 
-                  key={index} 
-                  style={[
-                    styles.messageBubble,
-                    msg.isFromCurrentUser ? styles.currentUserMessage : styles.otherUserMessage
-                  ]}
-                >
-                  <Text>{msg.content}</Text>
-                  <Text style={styles.messageTime}>{msg.timestamp}</Text>
-                </View>
-              ))}
+
+              {formattedMessages.map((message, index) => (
+                                  <View
+                                    key={message.timestamp + index}
+                                    style={{
+                                      flexDirection: "row",
+                                      justifyContent:
+                                        message.userId === userProfile?._id
+                                          ? "flex-end"
+                                          : "flex-start", // Align right if it's a user message
+                                      marginVertical: 5,
+                                    }}
+                                  >
+                                    <View
+                                      style={{
+                                        maxWidth: "90%", // Restrict width for better design
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        backgroundColor:
+                                          message.userId === userProfile?._id
+                                            ? "#e8ffc4"
+                                            : "#f2f2f2", // User vs other message color
+                                        shadowColor: "#000",
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 3,
+                                        elevation: 2, // Shadow for Android
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 16,
+                                          color: "#333",
+                                        }}
+                                      >
+                                        {message.content}
+                                      </Text>
+                                      <Text
+                                        style={{
+                                          fontSize: 12,
+                                          color: "#888",
+                                          marginTop: 5,
+                                          textAlign: "right", // Timestamp aligned within bubble
+                                        }}
+                                      >
+                                        {message.timestamp}
+              
+                                        {/* Format timestamp */}
+                                      </Text>
+                                    </View>
+                                  </View>
+                                ))}
             </ScrollView>
 
             <View style={styles.messageInputContainer}>
@@ -390,7 +561,7 @@ const ProductDetails = () => {
                 style={styles.messageInput}
               />
               <TouchableOpacity 
-                onPress={sendMessage}
+                onPress={sendMessagews}
                 style={styles.sendButton}
               >
                 <Ionicons name="send" size={20} color="white" />
@@ -405,6 +576,7 @@ const ProductDetails = () => {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 20,
     paddingBottom: 100,
   },
   loadingContainer: {

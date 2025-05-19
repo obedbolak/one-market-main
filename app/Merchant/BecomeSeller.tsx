@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store"; // Import SecureStore
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -36,17 +37,17 @@ const SendDataComponent = () => {
   const [loading, setLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
   const [token, setToken] = useState<string | null>(null); // State to store
-  const [momoPayNumber, setMomoPayNumber] = useState(""); // State to store Momo number
-  const amounts = [
-    { value: 1000, points: "10" },
-    { value: 1500, points: "20" },
-    { value: 2000, points: "40" },
-    { value: 4000, points: "50+" },
-  ];
+  // const [momoPayNumber, setMomoPayNumber] = useState(""); // State to store Momo number
+  // const amounts = [
+  //   { value: 1000, points: "10" },
+  //   { value: 1500, points: "20" },
+  //   { value: 2000, points: "40" },
+  //   { value: 4000, points: "50+" },
+  // ];
 
-  const [selectedAmount, setSelectedAmount] = React.useState<number | null>(
-    1000
-  );
+  // const [selectedAmount, setSelectedAmount] = React.useState<number | null>(
+  //   1000
+  // );
   // sJWT token
 
   // Use useEffect to fetch the token when the component mounts
@@ -102,58 +103,59 @@ const SendDataComponent = () => {
       setLoading(false);
     }
   };
-  const handlePlans = async () => {
-    // Added 'async' since you're using await
-    const Uid = userProfile?._id;
+  // const handlePlans = async () => {
+  //   // Added 'async' since you're using await
+  //   const Uid = userProfile?._id;
 
-    if (!Uid) {
-      console.error("User ID is missing");
-      return; // or handle this case appropriately
-    }
+  //   if (!Uid) {
+  //     console.error("User ID is missing");
+  //     return; // or handle this case appropriately
+  //   }
 
-    const data = {
-      productPayments:
-        selectedAmount === 1000
-          ? 1
-          : selectedAmount === 1500
-          ? 2
-          : selectedAmount === 2000
-          ? 3
-          : selectedAmount === 4000
-          ? 4
-          : null,
-    };
+  //   const data = {
+  //     productPayments:
+  //       selectedAmount === 1000
+  //         ? 1
+  //         : selectedAmount === 1500
+  //         ? 2
+  //         : selectedAmount === 2000
+  //         ? 3
+  //         : selectedAmount === 4000
+  //         ? 4
+  //         : null,
+  //   };
 
-    try {
-      const response = await fetch(
-        `https://onemarketapi.xyz/api/v1/user/${Uid}/product-payments`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+  //   try {
+  //     const response = await fetch(
+  //       `https://onemarketapi.xyz/api/v1/user/${Uid}/product-payments`,
+  //       {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(data),
+  //       }
+  //     );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Failed to update product payments"
-        );
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(
+  //         errorData.message || "Failed to update product payments"
+  //       );
+  //     }
 
-      const result = await response.json();
-      console.log("Update successful:", result);
-      // Handle successful response here (e.g., show success message)
-    } catch (error) {
-      console.error("Error updating product payments:", error);
-      // Handle error here (e.g., show error message to user)
-    }
-  };
+  //     const result = await response.json();
+  //     console.log("Update successful:", result);
+  //     // Handle successful response here (e.g., show success message)
+  //   } catch (error) {
+  //     console.error("Error updating product payments:", error);
+  //     // Handle error here (e.g., show error message to user)
+  //   }
+  // };
 
   // Function to handle sending the data
   const sendData = async () => {
+
     const data = {
       city,
       address,
@@ -165,6 +167,7 @@ const SendDataComponent = () => {
       USSDCode,
     };
     try {
+      setLoading(true);
       const response = await fetch(
         "https://onemarketapi.xyz/api/v1/user/update-profile",
         {
@@ -178,10 +181,10 @@ const SendDataComponent = () => {
 
       if (response.ok) {
         const result = await response.json();
-        Alert.alert("Success", "Data submitted successfully!", [
-          { text: "OK" },
-        ]);
+        
+      
         changeRole();
+        setLoading(false);
         // Clear all fields after successful submission
         setCity("");
         setAddress("");
@@ -263,6 +266,7 @@ const SendDataComponent = () => {
               onClear={() => setCity("")}
               helperText="Please enter a valid city"
               clearButtonVisible={true}
+              settoggleBranch={() => {}} // Pass a no-op function or your actual setter here
             />
             <Text style={styles.label}>Address:</Text>
             <TextInput
@@ -366,12 +370,18 @@ const SendDataComponent = () => {
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                { opacity: isFormValid() ? 1 : 0.5 }, // Change opacity if form is not valid
+                { opacity: isFormValid() && !loading ? 1 : 0.5 }, // Disable opacity if loading or form invalid
               ]}
               onPress={sendData}
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || loading} // Disable if loading or form invalid
             >
-              <Text style={styles.submitButtonText}>Become a Seller</Text>
+              {loading ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>  <ActivityIndicator color="#fff" />
+                <Text style={styles.submitButtonText}>Processing...</Text>
+               </View>
+              ) : (
+                <Text style={styles.submitButtonText}>Become a Seller</Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>

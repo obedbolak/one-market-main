@@ -1,13 +1,14 @@
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { useProduct } from "@/context/ProductContext";
 
 import {
   Dimensions,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -48,13 +49,19 @@ export default function HomeScreen() {
   const [visibleProductCount, setVisibleProductCount] =
     useState(PRODUCTS_PER_PAGE);
   const { userProfile, getUserProfile, tokenAvailable } = useAuth();
-  const { products, loading } = useProduct();
-  const { categories } = useProduct();
-  const { orders } = useProduct();
+  const { products, loading, error, refreshData } = useProduct();
+  
   const [isModalVisible, setModalVisible] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   // const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  }, [refreshData]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -73,28 +80,7 @@ export default function HomeScreen() {
     fetchProfile();
   }, []);
 
-  // Fetch products on mount
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const response = await axios.get(
-  //         "https://onemarketapi.xyz/api/v1/product/get-all"
-  //       );
-  //       const data = response.data;
-  //       if (data.success) {
-  //         setProducts(data.products);
-  //       } else {
-  //         console.error("Failed to fetch products");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching products:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchProducts();
-  // }, []);
+  
 
   const handleShowMore = () => {
     setVisibleProductCount((prev) =>
@@ -192,7 +178,12 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <Header />
           <Banner />
           <List />

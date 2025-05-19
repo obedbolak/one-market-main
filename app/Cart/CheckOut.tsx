@@ -636,6 +636,11 @@ const CheckOut: React.FC = () => {
           {activeSection === 2 && (
             <>
               <Text style={styles.sectionTitle}>Review Order</Text>
+               <ScrollView
+        style={{ maxHeight: "100%" }} // Adjust maxHeight as needed
+        contentContainerStyle={{ paddingBottom: 20 }}
+        showsVerticalScrollIndicator={true}
+      >
               <View style={styles.reviewContainer}>
                 {/* Shipping Address */}
                 <View style={styles.reviewItem}>
@@ -746,29 +751,7 @@ const CheckOut: React.FC = () => {
 
                 {/* Buttons */}
                 <View style={styles.buttonContainer}>
-                  {/* <PaymentButton
-                    paymentMethod={paymentMethod}
-                    onPayment={async () => {
-                      if (paymentMethod === "Mobile_Money") {
-                        await handlePayment();
-                        return true;
-                      } else {
-                        handleSubmit();
-                        return true;
-                      }
-                    }}
-                    onDeliveryConfirmation={() => {
-                      if (
-                        !shippingInfo.address ||
-                        !shippingInfo.city ||
-                        !shippingInfo.postalCode ||
-                        !shippingInfo.country ||
-                        !mobileMoneyNumber
-                      ) {
-                        Alert.alert("Error", "Please complete all fields.");
-                      }
-                    }}
-                  /> */}
+                
                   <TouchableOpacity
                     onPress={async () => {
                       if (isSubmitting || isProcessingPayment) return;
@@ -810,7 +793,7 @@ const CheckOut: React.FC = () => {
                     <Text style={{ color: "white" }}>Previous</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </View></ScrollView>
             </>
           )}
         </View>
@@ -924,7 +907,7 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    marginBottom: 10,
+    marginBottom: 0,
   },
   sectionTitle: {
     fontSize: width > 600 ? 22 : 18,

@@ -17,6 +17,7 @@ interface Product {
     category: string;
   };
   sellerId: string;
+  boosted: number;
 }
 
 interface Category {

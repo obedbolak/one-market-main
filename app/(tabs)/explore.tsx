@@ -6,7 +6,6 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -17,103 +16,84 @@ import {
   View,
 } from "react-native";
 
-interface ProfileFormData {
-  name: string;
-  email: string;
-  address: string;
-  city: string;
-  country: string;
-  phone: string;
-  answer: string;
-}
-
 export default function ProfileScreen() {
-  const { 
-    userProfile, 
-    tokenAvailable, 
-    getUserProfile, 
-    signout 
-  } = useAuth();
-  
-  const [formData, setFormData] = useState<ProfileFormData>({
-    name: "",
-    email: "",
-    address: "",
-    city: "",
-    country: "",
-    phone: "",
-    answer: "",
-  });
-  
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [sections, setSections] = useState({
-    personal: false,
-    orders: false,
-    security: false,
-    terms: false,
-  });
+  const { getUserProfile, signout, tokenAvailable, userProfile } = useAuth();
 
-  // Initialize form with user data
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        await getUserProfile();
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-        setLoading(false);
-      }
-    };
+  // Initialize all state hooks at the top level
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [phone, setPhone] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [orders, setOrders] = useState<string[]>([]);
+  const [profileImage, setProfileImage] = useState(null);
+  const [showPersonal, setShowPersonal] = useState(false);
+  const [showOrders, setShowOrders] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
-    loadProfile();
-  }, []);
+  const handlelogout = async () => {
+    await signout();
+    if (userProfile?.role === "administrator") {
+      router.push("/(auth)/AuthScreen");
+    } else {
+      router.push("/(tabs)");
+    }
+  };
 
-  // Update form when userProfile changes
+  // Update state when userProfile changes
   useEffect(() => {
     if (userProfile) {
-      setFormData({
-        name: userProfile.name || "",
-        email: userProfile.email || "",
-        address: userProfile.address || "",
-        city: userProfile.city || "",
-        country: userProfile.country || "",
-        phone: userProfile.phone || "",
-        answer: userProfile.answer || "",
-      });
+      setName(userProfile.name || "");
+      setEmail(userProfile.email || "");
+      setAddress(userProfile.address || "");
+      setCity(userProfile.city || "");
+      setCountry(userProfile.country || "");
+      setPhone(userProfile.phone || "");
+      setAnswer(userProfile.answer || "");
+      setOrders( ["Order #1234", "Order #5678"]);
     }
   }, [userProfile]);
 
-  const handleLogout = async () => {
-    await signout();
-    router.replace(userProfile?.role === "administrator" 
-      ? "/(auth)/AuthScreen" 
-      : "/(tabs)");
-  };
+  // Fetch user profile when the component is mounted
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        await getUserProfile();
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+    
+    if (tokenAvailable) {
+      fetchProfile();
+    }
+  }, [tokenAvailable]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission required", "We need access to your photos");
+      Alert.alert("Sorry, we need camera roll permissions");
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+      aspect: [4, 4],
+      quality: 0.7,
     });
 
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      await uploadProfilePicture(result.assets[0].uri);
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      uploadProfilePicture(uri);
     }
   };
 
   const uploadProfilePicture = async (uri: string) => {
-    const token = await SecureStore.getItemAsync("token");
-    if (!token) return;
-
+    const token = await SecureStore.getItemAsync("userToken");
     const formData = new FormData();
     formData.append("file", {
       uri,
@@ -132,213 +112,214 @@ export default function ProfileScreen() {
           },
         }
       );
+
       await getUserProfile();
       Alert.alert("Success", "Profile picture updated");
     } catch (error) {
       console.error("Upload error", error);
-      Alert.alert("Error", "Failed to update profile picture");
+      Alert.alert("Error", "Failed to upload profile picture");
     }
   };
 
-  const handleUpdateProfile = async () => {
-    if (!formData.name || !formData.email || !formData.phone) {
-      Alert.alert("Error", "Please fill in all required fields");
-      return;
-    }
-
-    setUpdating(true);
-    try {
-      const token = await SecureStore.getItemAsync("token");
-      await axios.put(
-        "https://onemarketapi.xyz/api/v1/user/profile",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+  const handleSubmit = () => {
+    if (name && email && phone && address && city && country && answer) {
+      Alert.alert(
+        "Profile Updated",
+        "Your profile has been updated successfully!"
       );
-      await getUserProfile();
-      Alert.alert("Success", "Profile updated successfully");
-    } catch (error) {
-      console.error("Update error", error);
-      Alert.alert("Error", "Failed to update profile");
-    } finally {
-      setUpdating(false);
+    } else {
+      Alert.alert("Error", "Please fill out all the fields.");
     }
   };
 
-  const toggleSection = (section: keyof typeof sections) => {
-    setSections(prev => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  const handlesignup = () => {
+    router.push({
+      pathname: "/(auth)/AuthScreen",
+      params: { mode: "signup" },
+    });
   };
 
-  const handleChangeText = (field: keyof ProfileFormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handlesignin = () => {
+    router.push({
+      pathname: "/(auth)/AuthScreen",
+      params: { mode: "signin" },
+    });
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+  const toggleShowPersonal = () => setShowPersonal(!showPersonal);
+  const toggleShowOrders = () => setShowOrders(!showOrders);
+  const toggleShowSecurity = () => setShowSecurity(!showSecurity);
+  const toggleShowTerms = () => setShowTerms(!showTerms);
 
   if (!tokenAvailable) {
     return (
-      <View style={styles.authContainer}>
-        <Text style={styles.authTitle}>Please sign in to view your profile</Text>
-        <View style={styles.authButtons}>
-          <TouchableOpacity 
-            style={styles.authButton}
-            onPress={() => router.push("/(auth)/AuthScreen")}
-          >
-            <Text style={styles.authButtonText}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.authButton, styles.signUpButton]}
-            onPress={() => router.push({
-              pathname: "/(auth)/AuthScreen",
-              params: { mode: "signup" },
-            })}
-          >
+      <View style={styles.centeredContainer}>
+        <Text style={{ color: "skyblue" }}>
+          Not logged in. Please sign in or sign up.
+        </Text>
+        <View style={styles.authButtonsContainer}>
+          <TouchableOpacity onPress={handlesignup} style={styles.authButton}>
             <Text style={styles.authButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlesignin} style={styles.authButton}>
+            <Text style={styles.authButtonText}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
+  }
+
+  if (!userProfile) {
+    return <Text>Loading profile...</Text>;
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.profileHeader}>
-        <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-          {userProfile?.profilePic?.url ? (
+      {/* Profile Image */}
+      <View style={styles.imageContainer}>
+        {userProfile.profilePic?.url ? (
+          <TouchableOpacity onPress={pickImage}>
             <Image
               source={{ uri: userProfile.profilePic.url }}
-              style={styles.avatar}
+              style={styles.dummyImage}
             />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={48} color="#fff" />
-            </View>
-          )}
-          <View style={styles.editIcon}>
-            <Ionicons name="camera" size={20} color="#fff" />
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.userName}>{userProfile?.name || "User"}</Text>
-        <Text style={styles.userEmail}>{userProfile?.email}</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <TouchableOpacity
+              onPress={pickImage}
+              style={{
+                zIndex: 1003,
+                position: "absolute",
+                top: "70%",
+                backgroundColor: "lightgray",
+                width: 30,
+                borderRadius: 30,
+                paddingHorizontal: 5,
+                paddingVertical: 5,
+                right: "40%",
+              }}
+            >
+              <Ionicons name="image" size={20} color={"green"} style={{}} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={pickImage}>
+              <Image
+                source={require("@/assets/images/prodimg/user.png")}
+                style={styles.dummyImage}
+              />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
-      {/* Personal Details Section */}
-      <TouchableOpacity 
-        onPress={() => toggleSection("personal")}
-        style={styles.sectionHeader}
-      >
-        <Text style={styles.sectionTitle}>Personal Information</Text>
-        <Ionicons 
-          name={sections.personal ? "chevron-up" : "chevron-down"} 
-          size={24} 
-        />
+      <View style={styles.header}>
+        <Text style={styles.title}>Hi, {userProfile.name}</Text>
+      </View>
+
+      {/* Personal Details */}
+      <TouchableOpacity onPress={toggleShowPersonal}>
+        <Text style={styles.addImageText}>Personal Details</Text>
       </TouchableOpacity>
 
-      {sections.personal && (
-        <View style={styles.sectionContent}>
+      {showPersonal && (
+        <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
             placeholder="Full Name"
-            value={formData.name}
-            onChangeText={(text) => handleChangeText("name", text)}
+            value={name}
+            onChangeText={setName}
           />
           <TextInput
             style={styles.input}
             placeholder="Email"
-            value={formData.email}
-            onChangeText={(text) => handleChangeText("email", text)}
+            value={email}
+            onChangeText={setEmail}
             keyboardType="email-address"
-            editable={false} // Email often can't be changed
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            value={formData.phone}
-            onChangeText={(text) => handleChangeText("phone", text)}
-            keyboardType="phone-pad"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Address"
-            value={formData.address}
-            onChangeText={(text) => handleChangeText("address", text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="City"
-            value={formData.city}
-            onChangeText={(text) => handleChangeText("city", text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Country"
-            value={formData.country}
-            onChangeText={(text) => handleChangeText("country", text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Security Answer"
-            value={formData.answer}
-            onChangeText={(text) => handleChangeText("answer", text)}
-          />
-          <TouchableOpacity 
-            style={styles.saveButton}
-            onPress={handleUpdateProfile}
-            disabled={updating}
-          >
-            {updating ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            )}
-          </TouchableOpacity>
+
+          {address !== "123 Main St" && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Address"
+                value={address}
+                onChangeText={setAddress}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                value={city}
+                onChangeText={setCity}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Country"
+                value={country}
+                onChangeText={setCountry}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Security Answer"
+                value={answer}
+                onChangeText={setAnswer}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value="********"
+                secureTextEntry={true}
+                editable={false}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* Orders Section */}
+      <TouchableOpacity onPress={toggleShowOrders}>
+        <Text style={styles.addImageText}>Orders</Text>
+      </TouchableOpacity>
+
+      {showOrders && (
+        <View style={styles.section}>
+          {orders.map((order, index) => (
+            <Text key={index} style={styles.orderItem}>
+              {order}
+            </Text>
+          ))}
         </View>
       )}
 
       {/* Security Section */}
-      <TouchableOpacity 
-        onPress={() => toggleSection("security")}
-        style={styles.sectionHeader}
-      >
-        <Text style={styles.sectionTitle}>Security</Text>
-        <Ionicons 
-          name={sections.security ? "chevron-up" : "chevron-down"} 
-          size={24} 
-        />
+      <TouchableOpacity onPress={toggleShowSecurity}>
+        <Text style={styles.addImageText}>Security</Text>
       </TouchableOpacity>
 
-      {sections.security && (
-        <View style={styles.sectionContent}>
-          <TextInput
-            style={styles.input}
-            placeholder="Current Password"
-            secureTextEntry
-          />
+      {showSecurity && (
+        <View style={styles.section}>
+          <Text>Change Password</Text>
           <TextInput
             style={styles.input}
             placeholder="New Password"
-            secureTextEntry
+            secureTextEntry={true}
           />
           <TextInput
             style={styles.input}
             placeholder="Confirm New Password"
-            secureTextEntry
+            secureTextEntry={true}
           />
           <TouchableOpacity style={styles.saveButton}>
             <Text style={styles.saveButtonText}>Change Password</Text>
@@ -346,12 +327,19 @@ export default function ProfileScreen() {
         </View>
       )}
 
+      {/* Terms and Conditions Section */}
+      <TouchableOpacity onPress={toggleShowTerms}>
+        <Text style={styles.addImageText}>Terms and Conditions</Text>
+      </TouchableOpacity>
+      {showTerms && (
+        <View style={styles.section}>
+          <Text>Terms and conditions content goes here...</Text>
+        </View>
+      )}
+
       {/* Logout Button */}
-      <TouchableOpacity 
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutButtonText}>Sign Out</Text>
+      <TouchableOpacity style={styles.logoutButton} onPress={handlelogout}>
+        <Text style={styles.closeButtonText}>Sign Out</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -359,130 +347,98 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
+    flexGrow: 1,
+    backgroundColor: "#f4f4f4",
     padding: 20,
-    paddingBottom: 40,
+    marginTop: 50,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
+  header: {
     alignItems: "center",
-  },
-  authContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  authTitle: {
-    fontSize: 18,
     marginBottom: 20,
-    textAlign: "center",
   },
-  authButtons: {
-    flexDirection: "row",
-    gap: 15,
-  },
-  authButton: {
-    backgroundColor: "skyblue",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-  },
-  signUpButton: {
-    backgroundColor: "#4CAF50",
-  },
-  authButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  profileHeader: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  avatarContainer: {
-    position: "relative",
-    marginBottom: 15,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  editIcon: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: "skyblue",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userName: {
+  title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 5,
   },
-  userEmail: {
-    fontSize: 16,
-    color: "#666",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  imageContainer: {
     alignItems: "center",
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+  dummyImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    marginBottom: 20,
   },
-  sectionContent: {
-    paddingVertical: 15,
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  addImageText: {
+    fontSize: 16,
+    color: "#007bff",
+  },
+  formContainer: {
+    marginBottom: 20,
   },
   input: {
     height: 50,
-    borderColor: "#ddd",
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     marginBottom: 15,
-    paddingHorizontal: 15,
+    paddingLeft: 15,
     backgroundColor: "#fff",
   },
   saveButton: {
-    backgroundColor: "skyblue",
-    padding: 15,
+    backgroundColor: "#007bff",
+    paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 10,
+    marginBottom: 20,
   },
   saveButtonText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  section: {
+    marginBottom: 20,
+  },
+  orderItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
   },
   logoutButton: {
-    marginTop: 30,
-    padding: 15,
+    backgroundColor: "#007bff",
+    paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",
-    backgroundColor: "#f44336",
   },
-  logoutButtonText: {
+  closeButtonText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  centeredContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
+  },
+  authButtonsContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 10,
+  },
+  authButton: {
+    backgroundColor: "skyblue",
+    padding: 12,
+    borderRadius: 10,
+  },
+  authButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });

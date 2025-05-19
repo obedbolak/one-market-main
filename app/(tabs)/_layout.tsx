@@ -54,7 +54,7 @@ export default function TabLayout() {
               color={color}
             />
           ),
-          href: showSettingsTab ? null : "/catalog",
+          href: showSettingsTab ?  "/catalog":"/catalog", 
         }}
       />
 

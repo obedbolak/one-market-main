@@ -6,6 +6,7 @@ import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
 
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   Image,
@@ -46,6 +47,7 @@ const CreateProduct = () => {
 
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [loading, setloading] = useState(false);
 
   const handleSelectProduct = (productType: string) => {
     setSelectedProduct(productType);
@@ -57,25 +59,17 @@ const CreateProduct = () => {
     setImages([]);
   };
 
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         "https://onemarketapi.xyz/api/v1/cat/get-all"
-  //       );
-  //       const data = await response.json();
-  //       if (data.success) {
-  //         setCategories(data.categories);
-  //       } else {
-  //         console.error("Failed to fetch categories:", data.message);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching categories:", error);
-  //     }
-  //   };
+const isProductFormValid = () => {
+  return (
+    productData.name.trim() !== "" &&
+    productData.price.trim() !== "" &&
+    productData.description.trim() !== "" &&
+    productData.category.trim() !== "" &&
+    productData.stock.trim() !== "" &&
+    images.length > 0
+  );
+};
 
-  //   fetchCategories();
-  // }, []);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -131,6 +125,7 @@ const CreateProduct = () => {
     });
 
     try {
+      setloading(true);
       const response = await fetch(
         "https://onemarketapi.xyz/api/v1/product/create",
         {
@@ -197,6 +192,7 @@ const CreateProduct = () => {
 
   const handleSuccessfulSubmission = () => {
     //clear all fields
+    setloading(false);
     setProductData(initialProductData);
     setSelectedProduct(null);
     setImages([]);
@@ -383,9 +379,13 @@ const CreateProduct = () => {
             </View>
             <TouchableOpacity
               onPress={() => {
-                if (productData.name === "" || images.length === 0) {
+                if (!isProductFormValid()) {
                   const emptyFields = [];
-                  if (productData.name === "") emptyFields.push("Product Name");
+                  if (productData.name.trim() === "") emptyFields.push("Product Name");
+                  if (productData.price.trim() === "") emptyFields.push("Price");
+                  if (productData.description.trim() === "") emptyFields.push("Description");
+                  if (productData.category.trim() === "") emptyFields.push("Category");
+                  if (productData.stock.trim() === "") emptyFields.push("Stock");
                   if (images.length === 0) emptyFields.push("Images");
 
                   Alert.alert(
@@ -399,12 +399,25 @@ const CreateProduct = () => {
               style={{
                 marginTop: 20,
                 padding: 15,
-                backgroundColor:
-                  productData.name === "" || images.length === 0 ? "gray" : "#1e90ff",
+                backgroundColor: isProductFormValid() ? "#1e90ff" : "gray",
                 borderRadius: 8,
               }}
-              disabled={productData.name === "" || images.length === 0}
+              disabled={!isProductFormValid()}
             >
+              {loading ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <ActivityIndicator size="small" color="#fff" />
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: "#fff",
+                    fontSize: 16,
+                  }}
+                >
+                  Creating Product...
+                </Text>
+</View>
+              ) : (
               <Text
                 style={{
                   textAlign: "center",
@@ -413,7 +426,7 @@ const CreateProduct = () => {
                 }}
               >
                 Create Product
-              </Text>
+              </Text>)}
             </TouchableOpacity>
           </>
         );
@@ -529,3 +542,5 @@ const styles = StyleSheet.create({
 });
 
 export default CreateProduct;
+
+// Helper to check if all required fields are filled

@@ -38,7 +38,7 @@ interface MyProductProps {
 
 const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
   const { userProfile } = useAuth();
-  const { products } = useProduct();
+  const { products, loading, error, refreshData } = useProduct();
   const [filteredProducts, setFilteredProducts] = useState<Item[]>([]);
   const [upgrade, setUpgrade] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string>("mtn");
@@ -55,8 +55,9 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
 
   useEffect(() => {
     if (products.length > 0 && userProfile?._id) {
-      const filtered = products.filter(
-        (product: Item) => product.sellerId === userProfile._id
+      // Cast or map products to Item type if possible
+      const filtered = (products as unknown as Item[]).filter(
+        (product) => product.sellerId === userProfile._id
       );
       setFilteredProducts(filtered);
     } else {
@@ -76,7 +77,7 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
     return result;
   };
 
-  const productChunks = chunkArray(filteredProducts.length > 0 ? filteredProducts : products, 2);
+  const productChunks = chunkArray(filteredProducts, 2);
 
   return (
     <>

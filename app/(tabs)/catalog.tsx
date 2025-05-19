@@ -1,16 +1,16 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useProduct } from '@/context/ProductContext';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  Dimensions,
-  ImageBackground,
-  ScrollView,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native';
 
 // Types
 interface ProductImage {
@@ -36,243 +36,334 @@ interface Product {
   boosted: number;
 }
 
-// Constants
-const API_URL = "https://onemarketapi.xyz/api/v1/product/get-all";
-const PLACEHOLDER_IMAGE = "https://via.placeholder.com/150";
-const WINDOW_WIDTH = Dimensions.get("window").width;
-const ITEM_WIDTH = WINDOW_WIDTH / 3 - 12; // 3 items per row
-const CACHE_KEY = "boostedProductsCache";
-const CACHE_EXPIRY_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+const Catalog = () => {
+  const {
+    products,
+    categories,
+    loading,
+    error,
+    lastUpdated,
+    refreshData,
+    fetchProductsByCategory,
+  } = useProduct();
 
-const Catalog: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch products
-  const fetchProducts = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || "Failed to fetch products");
-      }
-      setProducts(data.products);
-      setError(null);
-
-      // Cache the fetched data
-      const cacheData = { data: data.products, timestamp: Date.now() };
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-    } catch (error) {
-      setError(
-        `Error fetching products: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    } finally {
-      setIsRefreshing(false);
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  const handleRefresh = useCallback(async () => {
-    await fetchProducts();
-  }, [fetchProducts]);
-
-  const handleProductDetails = useCallback((item: Product) => {
-    router.push(`/Product/${item._id}`);
-  }, []);
-
-  // Organize products by category and prioritize Electronics
-  const renderContent = () => {
-    if (isLoading) {
-      return <Text style={styles.loadingText}>Loading products...</Text>;
-    }
-
-    if (error) {
-      return (
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    if (products.length === 0) {
-      return <Text style={styles.emptyText}>No products available</Text>;
-    }
-
-    // Group products by category
-    const categorizedProducts = products.reduce((acc, product) => {
-      const categoryName = product.category?.category || "Other";
-      if (!acc[categoryName]) {
-        acc[categoryName] = [];
-      }
-      acc[categoryName].push(product);
-      return acc;
-    }, {} as Record<string, Product[]>);
-
-    // Prioritize Electronics first
-    const sortedCategories = Object.keys(categorizedProducts).sort((a, b) =>
-      a === "Electronics" ? -1 : b === "Electronics" ? 1 : 0
-    );
-
-    return (
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {sortedCategories.map((category) => (
-          <View key={category}>
-            <TouchableOpacity><Text style={styles.categoryTitle}>{category}</Text></TouchableOpacity>
-            
-            <View style={styles.categoryContainer}>
-              {categorizedProducts[category].map(renderProductItem)}
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-    );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
   };
 
-  const renderProductItem = useCallback(
-    (item: Product) => (
-      <TouchableOpacity
-        key={item._id}
-        style={styles.productItem}
-        onPress={() => handleProductDetails(item)}
-        activeOpacity={0.7}
-      >
-        <ImageBackground
-          source={{ uri: item.images[0]?.url || PLACEHOLDER_IMAGE }}
+  const displayedProducts = selectedCategory
+    ? fetchProductsByCategory(selectedCategory)
+    : products;
+
+  const renderProductItem = ({ item }: { item: Product }) => (
+    <TouchableOpacity style={styles.productCard} activeOpacity={0.8} onPress={() => router.push(`Product/${item._id}`)}>
+      {item.images.length > 0 ? (
+        <Image
+          source={{ uri: item.images[0].url }}
           style={styles.productImage}
-        >
-          <View style={styles.productInfo}>
-            {item.stock < 5 && (
-              <Text style={styles.lowStock}>Only {item.stock} left!</Text>
-            )}
-            <Text numberOfLines={2} style={styles.productName}>
-              {item.name}
-            </Text>
-            <Text style={styles.productPrice}>
-              XAF{item.price.toLocaleString()}
-            </Text>
-          </View>
-        </ImageBackground>
-      </TouchableOpacity>
-    ),
-    [handleProductDetails]
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={[styles.productImage, styles.emptyImage]}>
+          <Text style={styles.emptyImageText}>No Image</Text>
+        </View>
+      )}
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={1} ellipsizeMode="tail">
+          {item.name}
+        </Text>
+        <Text style={styles.productPrice}>{item.price.toFixed(2)} XAF</Text>
+        <Text
+          style={[
+            styles.productStock,
+            item.stock > 0 ? styles.inStock : styles.outOfStock,
+          ]}>
+          {item.stock > 0 ? `In Stock (${item.stock})` : 'Out of Stock'}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 
-  return <SafeAreaView>{renderContent()}</SafeAreaView>;
+  const renderCategoryItem = ({ item }: { item: Category }) => (
+    <TouchableOpacity
+      style={[
+        styles.categoryButton,
+        selectedCategory === item._id && styles.selectedCategoryButton,
+      ]}
+      onPress={() =>
+        setSelectedCategory(selectedCategory === item._id ? null : item._id)
+      }>
+      <Text
+        style={[
+          styles.categoryText,
+          selectedCategory === item._id && styles.selectedCategoryText,
+        ]}>
+        {item.category}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
+        <Text style={styles.loadingText}>Loading products...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading products</Text>
+        <Text style={styles.errorSubText}>{error}</Text>
+        <TouchableOpacity onPress={refreshData} style={styles.retryButton}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Product Catalog</Text>
+        {lastUpdated && (
+          <Text style={styles.lastUpdated}>
+            Last updated: {lastUpdated.toLocaleString()}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Categories</Text>
+        <FlatList
+          horizontal
+          data={categories}
+          renderItem={renderCategoryItem}
+          keyExtractor={item => item._id}
+          contentContainerStyle={styles.categoryList}
+          showsHorizontalScrollIndicator={false}
+        />
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>
+          {selectedCategory
+            ? `${categories.find(c => c._id === selectedCategory)?.category} Products`
+            : 'All Products'}
+        </Text>
+
+        <FlatList
+          data={displayedProducts}
+          renderItem={renderProductItem}
+          keyExtractor={item => item._id}
+          numColumns={2}
+          columnWrapperStyle={styles.productRow}
+          contentContainerStyle={styles.productList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#007bff"
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No products found{selectedCategory ? ' in this category' : ''}
+              </Text>
+              <TouchableOpacity onPress={refreshData} style={styles.refreshButton}>
+                <Text style={styles.refreshButtonText}>Refresh</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      </View>
+    </View>
+  );
 };
 
-// Styles
 const styles = StyleSheet.create({
-  scrollViewContent: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-  },
-  categoryTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginVertical: 10,
-    textAlign: "center",
-  },
-  categoryContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  productItem: {
-    width: ITEM_WIDTH,
-    marginBottom: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-  },
-  productImage: {
-    width: "100%",
-    height: ITEM_WIDTH,
-    resizeMode: "cover",
-  },
-  productInfo: {
-    paddingHorizontal: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    width: "100%",
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    position: "absolute", // Position it at the bottom
-    bottom: 0, // Align to the bottom of the ImageBackground
-    justifyContent: "flex-end", // Ensure content is aligned to the bottom
-    paddingVertical: 8, // Add padding for spacing
-  },
-  productName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1a1a1a",
-  },
-  productPrice: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0066cc",
-    marginTop: 1,
-  },
-  lowStock: {
-    fontSize: 12,
-    color: "#ff3b30",
-    marginTop: 4,
-  },
-  centered: {
+  container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     padding: 20,
-    minHeight: 300,
+    backgroundColor: '#f8f9fa',
     marginTop: 20,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
   },
   loadingText: {
-    textAlign: "center",
     fontSize: 16,
-    color: "#666",
-    marginTop: 20,
+    color: '#6c757d',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    gap: 12,
   },
   errorText: {
-    color: "#ff3b30",
-    textAlign: "center",
-    marginBottom: 16,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#dc3545',
+    textAlign: 'center',
+  },
+  errorSubText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   retryButton: {
-    backgroundColor: "#0066cc",
+    backgroundColor: '#007bff',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 6,
+    elevation: 2,
+  },
+  refreshButton: {
+    backgroundColor: '#e9ecef',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 8,
-    marginTop: 12,
+    borderRadius: 6,
+    marginTop: 16,
+  },
+  refreshButtonText: {
+    color: '#495057',
+    fontWeight: '500',
   },
   retryButtonText: {
-    color: "#fff",
+    color: 'white',
+    fontWeight: '500',
     fontSize: 16,
-    fontWeight: "600",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 4,
+  },
+  lastUpdated: {
+    fontSize: 12,
+    color: '#6c757d',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#343a40',
+    marginBottom: 16,
+  },
+  categoryList: {
+    paddingBottom: 8,
+  },
+  categoryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginRight: 12,
+    borderRadius: 20,
+    backgroundColor: '#e9ecef',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  selectedCategoryButton: {
+    backgroundColor: '#007bff',
+    borderColor: '#007bff',
+  },
+  categoryText: {
+    color: '#495057',
+    fontWeight: '500',
+  },
+  selectedCategoryText: {
+    color: 'white',
+  },
+  productList: {
+    paddingBottom: 20,
+  },
+  productRow: {
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 16,
+  },
+  productCard: {
+    flex: 1,
+    minWidth: '48%',
+    maxWidth: '48%',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
+  productImage: {
+    width: '100%',
+    height: 150,
+    backgroundColor: '#f1f3f5',
+  },
+  emptyImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImageText: {
+    color: '#adb5bd',
+    fontSize: 12,
+  },
+  productInfo: {
+    padding: 16,
+  },
+  productName: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 6,
+    color: '#212529',
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007bff',
+    marginBottom: 6,
+  },
+  productStock: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  inStock: {
+    color: '#28a745',
+  },
+  outOfStock: {
+    color: '#dc3545',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    width: '100%',
   },
   emptyText: {
     fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 20,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginBottom: 16,
   },
 });
 

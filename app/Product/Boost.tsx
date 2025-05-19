@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useProduct } from "@/context/ProductContext";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Dimensions,
   ImageBackground,
@@ -33,17 +33,14 @@ interface Product {
   images: ProductImage[];
   category: Category;
   sellerId: string;
-  boosted: number;
+  boosted?: number; // Make boosted optional in case it's missing in some products
 }
 
 // Constants
-const API_URL = "https://onemarketapi.xyz/api/v1/product/get-all";
 const PLACEHOLDER_IMAGE = "https://via.placeholder.com/150";
 const WINDOW_WIDTH = Dimensions.get("window").width;
 const ITEM_WIDTH = WINDOW_WIDTH * 0.4; // 40% of screen width
 const INITIAL_ITEMS_TO_SHOW = 3;
-const CACHE_KEY = "boostedProductsCache";
-const CACHE_EXPIRY_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Skeleton component
 const SkeletonPlaceholder = ({ style }: { style: object }) => (
@@ -51,83 +48,26 @@ const SkeletonPlaceholder = ({ style }: { style: object }) => (
 );
 
 const Boost: React.FC = () => {
-  const [boostedProducts, setBoostedProducts] = useState<Product[]>([]);
+  const { products, loading, error, refreshData } = useProduct();
+
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
 
-  // Fetch products from the API
-  const fetchProducts = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || "Failed to fetch products");
-      }
-
-      const filteredProducts = data.products.filter(
-        (product: Product) => product.boosted >= 1
-      );
-      setBoostedProducts(filteredProducts);
-      setError(null);
-
-      // Cache the fetched data with a timestamp
-      const cacheData = {
-        data: filteredProducts,
-        timestamp: Date.now(),
-      };
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-    } catch (error) {
-      setError(
-        `Error fetching products: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    } finally {
-      setIsRefreshing(false);
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Load cached data if it exists and is not expired
-  const loadCachedData = useCallback(async () => {
-    try {
-      const cachedData = await AsyncStorage.getItem(CACHE_KEY);
-      if (cachedData) {
-        const { data, timestamp } = JSON.parse(cachedData);
-        const isCacheValid = Date.now() - timestamp < CACHE_EXPIRY_TIME;
-
-        if (isCacheValid) {
-          setBoostedProducts(data);
-          setIsLoading(false);
-          return true; // Cache is valid and used
-        }
-      }
-    } catch (error) {
-      console.error("Error loading cached data:", error);
-    }
-    return false; // Cache is invalid or unavailable
-  }, []);
-
   useEffect(() => {
-    const initializeData = async () => {
-      const isCacheValid = await loadCachedData();
-      if (!isCacheValid) {
-        await fetchProducts(); // Fetch fresh data if cache is invalid
-      }
-    };
-    initializeData();
-  }, [fetchProducts, loadCachedData]);
+    setIsLoading(loading);
+  }, [loading]);
+
+  const boostedProducts = useMemo(
+    () => products.filter(product => product.boosted >= 1),
+    [products]
+  );
 
   const handleRefresh = useCallback(async () => {
-    await fetchProducts(); // Always fetch fresh data on refresh
-  }, [fetchProducts]);
+    setIsRefreshing(true);
+    await refreshData();
+    setIsRefreshing(false);
+  }, [refreshData]);
 
   const handleProductDetails = useCallback((item: Product) => {
     router.push(`/Product/${item._id}`);
@@ -220,7 +160,7 @@ const Boost: React.FC = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollViewContent}
         >
-          {displayedProducts.map(renderProductItem)}
+          {(displayedProducts as Product[]).map(renderProductItem)}
           {!showAllProducts &&
             boostedProducts.length > INITIAL_ITEMS_TO_SHOW && (
               <TouchableOpacity
