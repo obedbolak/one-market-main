@@ -217,6 +217,7 @@ const ActionButtons = ({
 }: ActionButtonsProps) => {
   const [isApproveClicked, setIsApproveClicked] = useState(false);
   const [isDeleteClicked, setIsDeleteClicked] = useState(false);
+  
 
   const handleApprovePress = () => {
     if (!isApproveClicked) {
@@ -263,6 +264,7 @@ const ActionButtons = ({
         onPress={handleDeletePress}
         disabled={isDeleteClicked} // Disable button after it's clicked
       >
+        
         <Ionicons name="trash-outline" size={16} color="#fff" />
         <Text
           style={[
@@ -449,6 +451,8 @@ const Products = ({
 }) => {
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
+
 
   const totalProducts = products.length;
   const outOfStock = products.filter((p) => p.stock === 0).length;
@@ -467,13 +471,14 @@ const Products = ({
 
   const deleteProduct = async (productId: string) => {
     try {
+      setLoading(true);
       const response = await axiosInstance.delete(`/product/${productId}`);
       if (response.status === 200) {
         fetchData();
         Alert.alert("Success", "Product deleted successfully", [
           { text: "OK", onPress: () => console.log("OK Pressed") },
         ]);
-        fetchData();
+       setLoading(false);
       } else {
         Alert.alert("Error", "Failed to delete product", [
           { text: "OK", onPress: () => console.log("OK Pressed") },
@@ -1415,18 +1420,7 @@ const Administrators = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <View
-        style={[
-          styles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+ 
 
   return (
     <SafeAreaView style={styles.container}>

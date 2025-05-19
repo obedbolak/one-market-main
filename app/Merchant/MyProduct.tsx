@@ -1,6 +1,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -64,6 +65,28 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
       setFilteredProducts([]);
     }
   }, [products, userProfile?._id]);
+
+
+  //create a delete product function
+
+  const deleteProduct = async (productId: string) => {
+  try {
+    // Replace with your actual API endpoint
+    const response = await axios.delete(
+      `https://onemarketapi.xyz/api/v1/product/${productId}`
+    );
+
+    if (response.status === 200) {
+      Alert.alert("Success", "Product deleted successfully.");
+      refreshData();
+    } else {
+      Alert.alert("Error", "Failed to delete product.");
+    }
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    Alert.alert("Error", "An error occurred while deleting the product.");
+  }
+};
   
   const isPlanDisabled = (planNumber: number): boolean => {
     return userProfile?.productPayments === planNumber;
@@ -180,15 +203,38 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
         <ScrollView>
           {productChunks.map((row, rowIndex) => (
             <View key={`row-${rowIndex}`} style={styles.row}>
+              
               {row.map((item) => (
+                <View key={item._id} style={{ flex: 1 }}>
                 <TouchableOpacity
-                  key={item._id}
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  backgroundColor: "rgba(135, 206, 235, 0.1)",
+                  borderRadius: 5,
+                  padding: 2,
+                  zIndex: 1,
+                }}
+                onPress={() => {
+                  deleteProduct(item._id);
+
+              }}
+              >
+                <Ionicons
+                  name="trash"
+                  size={24}
+                  color="red"
+                  style={{ marginBottom: 10 }}
+                />
+              </TouchableOpacity>
+                <TouchableOpacity
                   style={styles.itemContainer}
                   onPress={() => {
                     setBoost(!boost);
                     setSelectedItem(item);
                   }}
                 >
+               
                   <Image
                     source={{ uri: item.images[0]?.url }}
                     style={{ width: "100%", height: 100 }}
@@ -221,6 +267,7 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
                     <Ionicons name="arrow-up" size={16} color="green" />
                   </TouchableOpacity>
                 </TouchableOpacity>
+                </View>
               ))}
               {row.length === 1 && <View style={styles.itemContainer} />}
             </View>

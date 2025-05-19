@@ -162,7 +162,8 @@ const JobDetails = () => {
   const submitFormData = async () => {
     const form = new FormData();
     let endpoint = "";
-
+setLoadingCreate(true)
+setLoading(true)
     if (id === "1") {
       endpoint = "https://onemarketapi.xyz/api/v1/job/create/application";
       form.append("firstName", firstName);
@@ -423,10 +424,11 @@ const JobDetails = () => {
                   setLoading(true);
                   submitFormData();
                 }}
-                disabled={loading}
+                disabled={loading || selectedImageUris.length === 0 || !firstName || !lastName || !middleName || !jobType || !briefWhy || !yearsExperience || !email || !phone || !gender}
               >
                 {loading ? (
                   <ActivityIndicator size="small" color="#fff" />
+                  
                 ) : (
                   <Text style={styles.submitButtonText}>
                     Submit Application
