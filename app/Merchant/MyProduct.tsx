@@ -1,7 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -39,7 +38,7 @@ interface MyProductProps {
 
 const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
   const { userProfile } = useAuth();
-  const { products, loading, error, refreshData } = useProduct();
+  const { products, loading, error, refreshData, deleteProduct } = useProduct();
   const [filteredProducts, setFilteredProducts] = useState<Item[]>([]);
   const [upgrade, setUpgrade] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string>("mtn");
@@ -49,6 +48,7 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
   const [boostedValue, setBoostValue] = useState<string>("");
   const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
   const [momoPayNumber, setMomoPayNumber] = useState<string>("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     onProductCountChange(products.length);
@@ -68,25 +68,19 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
 
 
   //create a delete product function
+  const handleDelete = async (product_id: string) => {
+    try {
+      setFilteredProducts((prev) => prev.filter((item) => item._id !== product_id));
 
-  const deleteProduct = async (productId: string) => {
-  try {
-    // Replace with your actual API endpoint
-    const response = await axios.delete(
-      `https://onemarketapi.xyz/api/v1/product/${productId}`
-    );
-
-    if (response.status === 200) {
-      Alert.alert("Success", "Product deleted successfully.");
-      refreshData();
-    } else {
-      Alert.alert("Error", "Failed to delete product.");
+      setIsDeleting(true);
+      await deleteProduct(product_id);
+      // Product deleted successfully
+    } catch (error) {
+      alert('Failed to delete product. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    Alert.alert("Error", "An error occurred while deleting the product.");
-  }
-};
+  };
   
   const isPlanDisabled = (planNumber: number): boolean => {
     return userProfile?.productPayments === planNumber;
@@ -201,77 +195,120 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
         </View>
       ) : (
         <ScrollView>
-          {productChunks.map((row, rowIndex) => (
-            <View key={`row-${rowIndex}`} style={styles.row}>
-              
-              {row.map((item) => (
-                <View key={item._id} style={{ flex: 1 }}>
-                <TouchableOpacity
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  backgroundColor: "rgba(135, 206, 235, 0.1)",
-                  borderRadius: 5,
-                  padding: 2,
-                  zIndex: 1,
-                }}
-                onPress={() => {
-                  deleteProduct(item._id);
+         {productChunks.map((row, rowIndex) => (
+  <View 
+    key={`row-${rowIndex}`} 
+    style={{ 
+      flexDirection: 'row', 
+      gap: 16, 
+      marginBottom: 16 
+    }}
+  >
+    {row.map((item) => (
+      <View 
+        key={item._id} 
+        style={{ 
+          flex: 1, 
+          position: 'relative',
+          backgroundColor: 'white',
+          borderRadius: 12,
+          padding: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 2,
+        }}
+      >
+        {/* Delete Button */}
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            top: 8,
+           left: 0,
+            zIndex: 10,
+            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+            borderRadius: 9999,
+            width: 32,
+            height: 32,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onPress={() => handleDelete(item._id)}
+        >
+          <Ionicons name="trash" size={16} color="#dc2626" />
+        </TouchableOpacity>
 
-              }}
-              >
-                <Ionicons
-                  name="trash"
-                  size={24}
-                  color="red"
-                  style={{ marginBottom: 10 }}
-                />
-              </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.itemContainer}
-                  onPress={() => {
-                    setBoost(!boost);
-                    setSelectedItem(item);
-                  }}
-                >
-               
-                  <Image
-                    source={{ uri: item.images[0]?.url }}
-                    style={{ width: "100%", height: 100 }}
-                    resizeMode="contain"
-                  />
-                  <Text>{item.name}</Text>
-                  <Text>{item.price}</Text>
-                  <TouchableOpacity
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      backgroundColor: "rgba(135, 206, 235, 0.1)",
-                      borderRadius: 5,
-                      padding: 2,
-                    }}
-                    onPress={() => {
-                      setBoost(!boost);
-                      setSelectedItem(item);
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "skyblue",
-                        fontWeight: "bold",
-                        fontSize: 16,
-                      }}
-                    >
-                      Boost
-                    </Text>
-                    <Ionicons name="arrow-up" size={16} color="green" />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-                </View>
-              ))}
-              {row.length === 1 && <View style={styles.itemContainer} />}
-            </View>
-          ))}
+        {/* Product Image */}
+        <View style={{ marginBottom: 12 }}>
+          <Image
+            source={{ uri: item.images[0]?.url }}
+            style={{
+              width: '100%',
+              height: 120,
+              borderRadius: 8,
+              backgroundColor: '#f3f4f6',
+            }}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Product Info */}
+        <View style={{ gap: 4 }}>
+          <Text 
+            style={{ 
+              fontSize: 14, 
+              fontWeight: '500',
+              color: '#111827'
+            }}
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+          <Text 
+            style={{ 
+              fontSize: 16, 
+              fontWeight: '600',
+              color: '#111827'
+            }}
+          >
+            ${item.price.toFixed(2)}
+          </Text>
+        </View>
+
+        {/* Boost Button */}
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            bottom: 12,
+            left: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 9999,
+          }}
+          onPress={() => {
+            setBoost(!boost);
+            setSelectedItem(item);
+          }}
+        >
+          <Ionicons name="arrow-up" size={14} color="#3b82f6" />
+          <Text style={{ fontSize: 12, fontWeight: '500', color: '#3b82f6' }}>
+            Boost
+          </Text>
+        </TouchableOpacity>
+      </View>
+    ))}
+    
+    {/* Empty card to fill row if needed */}
+    {row.length === 1 && (
+      <View style={{ flex: 1 }} />
+    )}
+  </View>
+))}
         </ScrollView>
       )}
     </>

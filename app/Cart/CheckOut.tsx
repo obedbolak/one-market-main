@@ -398,7 +398,6 @@ const CheckOut: React.FC = () => {
       alert("Failed to send SMS. Please try again.");
     }
   };
-  console.log(userPhone);
   return (
     <SafeAreaView>
       <TouchableOpacity

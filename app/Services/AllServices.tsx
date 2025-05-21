@@ -611,6 +611,8 @@ const AllServices: React.FC = () => {
     setActive(true);
 
     const formData = new FormData();
+
+    // Common fields for all services
     formData.append("name", newService.name);
     formData.append("description", newService.description);
     formData.append("location", newService.location);
@@ -618,132 +620,70 @@ const AllServices: React.FC = () => {
     formData.append("email", newService.email);
     formData.append("locationCity", newService.locationCity);
 
+    // Add specific fields based on service type
+    if (newService.postType) { // This indicates it's a property
+
+      formData.append("postType", newService.postType);
+      formData.append("postName", newService.postName);
+      formData.append("propertyState", newService.propertyState);
+      console.log("Property state:", formData);
+    }
+     
+    // Add images
     images.forEach((uri, index) => {
       const type = uri.endsWith(".jpg") ? "image/jpeg" : "image/png";
       formData.append("files", {
         uri,
-        name: `product_image${index + 1}.jpg`,
+        name: `service_image${index + 1}.${type === "image/jpeg" ? "jpg" : "png"}`,
         type,
       } as any);
     });
-    try {
-      const response = await fetch(
-        "https://onemarketapi.xyz/api/v1/service/services",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          body: formData,
-        }
-      );
 
-      const responseText = await response.text();
+    try {
+      // Determine the correct endpoint based on service type
+      const endpoint = newService.postType
+        ? "https://onemarketapi.xyz/api/v1/prop/property"
+        : "https://onemarketapi.xyz/api/v1/service/services";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      });
+
+      const responseData = await response.json();
+
       if (response.ok) {
-        const responseData = JSON.parse(responseText);
-        if (responseData.success) {
-          Alert.alert("Success", "service created successfully!");
-          setNewService({
-            name: "",
-            rate: "",
-            description: "",
-            location: "",
-            email: "",
-            contactInfo: "",
-            locationCity: "",
-            postName: "",
-            postType: "",
-            propertyState: "",
-          });
-          setImages([]);
-          setActive(false);
-        } else {
-          Alert.alert(
-            "Error",
-            responseData.message || "Failed to create service."
-          );
-        }
+        Alert.alert("Success", "Service created successfully!");
+        resetForm();
       } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        Alert.alert("Error", responseData.message || "Failed to create service.");
       }
     } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Error", "An unexpected error occurred.");
+    } finally {
       setActive(false);
-      console.error("Error submitting pr service:", error);
-      Alert.alert("Error", "There was an error while submitting the product.");
     }
   };
 
-  const handleCreateProperty = async () => {
-    if (images.length === 0) {
-      Alert.alert("Error", "Please select at least one image.");
-      return;
-    }
-    setActive(true);
-
-    const formData = new FormData();
-    formData.append("postType", newService.postType);
-    formData.append("postName", newService.postName);
-    formData.append("propertyState", newService.propertyState);
-    formData.append("description", newService.description);
-    formData.append("location", "newService.location");
-    formData.append("contactInfo", newService.contactInfo);
-    formData.append("email", newService.email);
-    formData.append("locationCity", newService.locationCity);
-
-    images.forEach((uri, index) => {
-      const type = uri.endsWith(".jpg") ? "image/jpeg" : "image/png";
-      formData.append("files", {
-        uri,
-        name: `product_image${index + 1}.jpg`,
-        type,
-      } as any);
+  const resetForm = () => {
+    setNewService({
+      name: "",
+      rate: "",
+      description: "",
+      location: "",
+      email: "",
+      contactInfo: "",
+      locationCity: "",
+      postName: "",
+      postType: "",
+      propertyState: "",
     });
-    try {
-      const response = await fetch(
-        "https://onemarketapi.xyz/api/v1/prop/property",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          body: formData,
-        }
-      );
-
-      const responseText = await response.text();
-      if (response.ok) {
-        const responseData = JSON.parse(responseText);
-        if (responseData.success) {
-          Alert.alert("Success", "service created successfully!");
-          setNewService({
-            name: "",
-            rate: "",
-            description: "",
-            location: "",
-            email: "",
-            contactInfo: "",
-            locationCity: "",
-            postName: "",
-            postType: "",
-            propertyState: "",
-          });
-          setImages([]);
-          setActive(false);
-        } else {
-          Alert.alert(
-            "Error",
-            responseData.message || "Failed to create service."
-          );
-        }
-      } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      console.log(formData);
-      setActive(false);
-      console.error("Error submitting pr service:", error);
-      Alert.alert("Error", "There was an error while submitting the product.");
-    }
+    setImages([]);
+    setCreateLocation(false);
   };
 
   const allServicesContent = (
@@ -1303,21 +1243,26 @@ const AllServices: React.FC = () => {
                 {newService.name === "Real Estate" && (
                   <RealEstateSelector
                     onSelectionChange={(transaction, property) => {
-                      setNewService({
-                        ...newService,
-                        name: transaction,
-                      });
+                     
 
                       if (transaction === "rent") {
                         setNewService({
                           ...newService,
                           postType: property,
                         });
+                        setNewService({
+                        ...newService,
+                        propertyState: transaction,
+                      });
                       } else if (transaction === "sale") {
                         setNewService({
                           ...newService,
                           postType: property,
                         });
+                        setNewService({
+                        ...newService,
+                        propertyState: transaction,
+                      });
                       } else {
                         setNewService({
                           ...newService,
@@ -1522,25 +1467,21 @@ const AllServices: React.FC = () => {
               {newService.postType !== "" ? "Property Title" : "Service Name"}
             </Text>
             <TextInput
-              style={styles.input}
-              placeholder={
-                newService.postType !== ""
-                  ? "Enter Property Title"
-                  : "Enter service name(Pharmacy, Car-Repairs etc)"
-              }
-              value={
-                newService.postType !== ""
-                  ? newService.postName
-                  : newService.location
-              }
-              onChangeText={(text: string) =>
-                newService.postType !== ""
-                  ? setNewService({ ...newService, postName: text })
-                  : setNewService({ ...newService, location: text })
-              }
-            />
+  style={styles.input}
+  placeholder={
+    newService.postType 
+      ? "Enter Property Title" 
+      : "Enter service name (e.g., Pharmacy, Car-Repairs)"
+  }
+  value={newService.postType ? newService.postName : newService.location}
+  onChangeText={(text) =>
+    newService.postType
+      ? setNewService({ ...newService, postName: text })
+      : setNewService({ ...newService, location: text })
+  }
+/>
             <View style={{ flexDirection: "row" }}>
-              <View style={{}}>
+              <View style={{ flex: 1, marginBottom: 10 }}>  
                 <Text style={styles.formLabel}>City</Text>
                 <TouchableOpacity
                   style={{
@@ -1711,7 +1652,7 @@ const AllServices: React.FC = () => {
                       <>
                         <TouchableOpacity
                           style={styles.submitButton}
-                          onPress={handleCreateProperty} // Directly call the property creation function
+                          onPress={() => handleCreateService()} // Directly call the service creation function
                         >
                           <Text style={styles.submitButtonText}>
                             Create Property
@@ -1722,7 +1663,7 @@ const AllServices: React.FC = () => {
                       <>
                         <TouchableOpacity
                           style={styles.submitButton}
-                          onPress={handleCreateService} // Directly call the service creation function
+                          onPress={() => handleCreateService()} // Directly call the service creation function
                         >
                           <Text style={styles.submitButtonText}>
                             Create Service

@@ -40,6 +40,8 @@ interface ProductContextType {
   lastUpdated: Date | null;
   refreshData: () => Promise<void>;
   fetchProductsByCategory: (categoryId: string) => Product[];
+  deleteProduct: (productId: string) => Promise<void>;
+
 }
 
 const ProductContext = createContext<ProductContextType>({
@@ -51,6 +53,7 @@ const ProductContext = createContext<ProductContextType>({
   lastUpdated: null,
   refreshData: async () => {},
   fetchProductsByCategory: () => [],
+  deleteProduct: async () => {},
 });
 
 const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -190,9 +193,48 @@ const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     await fetchData();
   };
 
+    const deleteProduct = useCallback(async (productId: string) => {
+    try {
+      // Optimistically remove from local state
+      setProducts(prevProducts => prevProducts.filter(p => p._id !== productId));
+      
+      // Remove from AsyncStorage cache
+      const cachedProducts = await AsyncStorage.getItem('products');
+      if (cachedProducts) {
+        const parsedProducts = JSON.parse(cachedProducts);
+        const updatedProducts = parsedProducts.filter((p: Product) => p._id !== productId);
+        await AsyncStorage.setItem('products', JSON.stringify(updatedProducts));
+      }
+
+      // Send delete request to server
+      const response = await fetch(`https://onemarketapi.xyz/api/v1/product/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authorization header if needed
+          // 'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product on server');
+      }
+
+      // Optionally refresh data to ensure consistency
+      await refreshData();
+    } catch (err) {
+      // Revert optimistic update if deletion failed
+      await refreshData();
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete product';
+      setError(errorMessage);
+      throw err; // Re-throw to allow component to handle the error
+    }
+  }, [refreshData]);
+
   return (
     <ProductContext.Provider 
       value={{ 
+        deleteProduct,
         products, 
         categories, 
         orders, 
