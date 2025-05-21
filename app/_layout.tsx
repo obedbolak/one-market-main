@@ -29,6 +29,7 @@ export default function RootLayout() {
 
   return (
   <ProductProvider>
+    
     <AuthProvider>
    <Provider store={store}>
         <Stack>
@@ -94,8 +95,10 @@ export default function RootLayout() {
         </Stack>
         <StatusBar style="dark" />
       </Provider>
-    </AuthProvider>      
+    </AuthProvider>  
+        
     </ProductProvider>
+   
 
   );
 }

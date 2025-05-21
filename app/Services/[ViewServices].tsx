@@ -1,3 +1,4 @@
+import { useOthers } from "@/context/OthersContext"; // Make sure this import exists
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useLocalSearchParams } from "expo-router";
@@ -73,8 +74,8 @@ const ViewServices = () => {
     id: string;
     category: string;
   }>();
-  const [momoNum, setMomoNum] = useState("");
-  const [message, setMessage] = useState<string>("");
+  const { services } = useOthers(); // <-- Use services from context
+
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -330,32 +331,15 @@ const ViewServices = () => {
     setSeats(seats + 1);
   };
 
-  const fetchServiceItems = async () => {
-    try {
-      const response = await axios.get(
-        "https://onemarketapi.xyz/api/v1/service/services"
-      );
-      const filteredService = response.data.services.find(
-        (service: Service) => service._id === id
-      );
+  useEffect(() => {
+    if (id && services.length > 0) {
+      const filteredService = services.find((service) => service._id === id);
       setService(filteredService || null);
       setLoading(false);
-    } catch (err) {
-      setError("Failed to fetch lost items");
-      setLoading(false);
     }
-  };
+  }, [id, category, services]);
 
-  useEffect(() => {
-    if (id) {
-      fetchServiceItems();
-    }
-  }, [id, category]);
-
-  const handleSendMessage = () => {
-    console.log("Message sent:", message);
-    setMessage("");
-  };
+  
 
   const handleInputChange: InputChangeHandler = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -618,12 +602,12 @@ const ViewServices = () => {
             {selectedPayment === "Momo" && (
               <PhoneField
                 label="Enter Momo Number"
-                value={momoNum}
-                onChangeText={(text) => setMomoNum(text)}
+                value={formData.momoNumber}
+                onChangeText={(text) => handleInputChange("momoNumber", text)}
                 placeholder="Enter your momo number"
                 helperText="it should be 9 digits, must be Orange or MTN"
                 clearButtonVisible={true}
-                onClear={() => handleInputChange("phone", "")}
+                onClear={() => handleInputChange("momoNumber", "")}
               />
             )}
             {renderPaymentSummary()}

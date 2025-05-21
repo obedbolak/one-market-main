@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useOthers } from "@/context/OthersContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
@@ -204,11 +205,12 @@ const AllServices: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>(
     categoryList ? categoryList : "All"
   );
-  const [service, setService] = useState<Service[]>([]);
+  const { services, refreshAll, fetchServices } = useOthers();
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
-  const [filteredServices, setFilteredServices] = useState(service);
+  const [filteredServices, setFilteredServices] = useState(services);
   const [createLocation, setCreateLocation] = useState<boolean>(false);
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState(properties);
@@ -225,7 +227,6 @@ const AllServices: React.FC = () => {
       const response = await axios.get(
         "https://onemarketapi.xyz/api/v1/service/services"
       );
-      setService(response.data.services);
       setLoading(false);
     } catch (err) {
       setError("Failed to fetch lost items");
@@ -273,10 +274,11 @@ const AllServices: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchServiceItems();
+    // fetchServiceItems();
     fetchProperties();
     fetchDrugs();
     fetchTransport();
+    console.log(services);
   }, []);
 
   const ServiceCard: React.FC<ServiceCardProps> = ({ item }) => (
@@ -414,7 +416,7 @@ const AllServices: React.FC = () => {
 
   useEffect(() => {
     const query = searchQuery.toLowerCase().trim();
-    const updatedFilteredServices = service.filter((item) => {
+    const updatedFilteredServices = services.filter((item) => {
       const categoryMatch =
         selectedCategory === "All" || item.name === selectedCategory;
       const locationMatch = location
@@ -432,7 +434,7 @@ const AllServices: React.FC = () => {
     });
 
     setFilteredServices(updatedFilteredServices);
-  }, [service, searchQuery, selectedCategory, location]);
+  }, [services, searchQuery, selectedCategory, location]);
 
   const renderService: ListRenderItem<Service> = ({ item }) => (
     <ServiceCard item={item} />
@@ -444,7 +446,7 @@ const AllServices: React.FC = () => {
 
   const renderJob: ListRenderItem<Job> = ({ item }) => <JobCard item={item} />;
 
-  const filteredServicesCat = service.filter((item) => {
+  const filteredServicesCat = services.filter((item) => {
     if (selectedCategory === "All") {
       return (
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

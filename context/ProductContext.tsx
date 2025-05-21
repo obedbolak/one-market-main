@@ -31,6 +31,46 @@ interface Order {
   // Add your order properties here
 }
 
+interface IImage {
+  public_id: string;
+  url: string;
+  _id: string;
+}
+
+// Main Service Interface
+interface Service {
+  _id: string;
+  locationCity: string;
+  name: string;
+  description: string;
+  location: string;
+  contactInfo: string;
+  email: string;
+  images: IImage[];
+  status: "active" | "inactive";
+  createdAt: string;
+  __v: number;
+}
+
+interface Job {
+  id: string;
+  title: string;
+  rate: string;
+  description: string;
+}
+
+interface LostItem {
+  _id: string;
+  itemName: string;
+  description: string;
+  location: string;
+  status: "Lost" | "Found";
+  contactInfo: string;
+  images: IImage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface ProductContextType {
   products: Product[];
   categories: Category[];
@@ -47,6 +87,7 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType>({
   products: [],
   categories: [],
+
   orders: [],
   loading: true,
   error: null,
@@ -58,6 +99,9 @@ const ProductContext = createContext<ProductContextType>({
 
 const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [lostItems, setLostItems] = useState<LostItem[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,29 +113,44 @@ const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       setLoading(true);
       setError(null);
       
-      const [productsRes, categoriesRes, ordersRes] = await Promise.all([
+      const [productsRes, categoriesRes, ordersRes, servicesRes, lostItemsRes, jobsRes] = await Promise.all([
         fetch('https://onemarketapi.xyz/api/v1/product/get-all'),
         fetch('https://onemarketapi.xyz/api/v1/cat/get-all'),
-        fetch('https://onemarketapi.xyz/api/v1/orders/all-orders')
+        fetch('https://onemarketapi.xyz/api/v1/orders/all-orders'),
+        fetch('https://onemarketapi.xyz/api/v1/service/services'),
+        fetch('https://onemarketapi.xyz/api/v1/lost/lost-items'),
+        fetch('https://onemarketapi.xyz/api/v1/job/all-jobs')
+
       ]);
 
-      if (!productsRes.ok || !categoriesRes.ok || !ordersRes.ok) {
+      if (!productsRes.ok || !categoriesRes.ok || !ordersRes.ok || !servicesRes.ok || !lostItemsRes.ok || !jobsRes.ok) {
         throw new Error('Failed to fetch data from one or more endpoints');
       }
 
-      const [productsData, categoriesData, ordersData] = await Promise.all([
+      const [productsData, categoriesData, ordersData, servicesData, lostItemsData, jobsData] = await Promise.all([
         productsRes.json(),
-        
         categoriesRes.json(),
-        ordersRes.json()
+        ordersRes.json(),
+        servicesRes.json(),
+        lostItemsRes.json(),
+        jobsRes.json()
       ]);
       // Validate and transform data
     //   const validatedProducts = Array.isArray(productsData) ? productsData : [];
     const validatedProducts = Array.isArray(productsData?.products)
   ? productsData.products
   : [];
+
       const validatedCategories = Array.isArray(categoriesData.categories) ? categoriesData.categories: [];
       const validatedOrders = Array.isArray(ordersData) ? ordersData : [];
+      const validateServices = Array.isArray(servicesData?.services) ? servicesData : [];
+      const validateLostItems = Array.isArray(lostItemsData?.items) ? lostItemsData : [];
+      const validateJobs = Array.isArray(jobsData?.jobCreations) ? jobsData : [];
+
+      setServices(validateServices);
+      setLostItems(validateLostItems);
+      setJobs(validateJobs);
+      console.log('Services:', validateServices, 'LostItems:', validateLostItems, 'Jobs:', validateJobs);
       // Update state
       setProducts(validatedProducts);
       setCategories(validatedCategories);

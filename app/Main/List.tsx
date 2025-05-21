@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useOthers } from "@/context/OthersContext";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { router } from "expo-router";
@@ -236,27 +237,10 @@ const CategoryButton = ({
 };
 
 const Services = () => {
-  const [service, setService] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // Fetch lost items from the backend
-  const fetchServiceItems = async () => {
-    try {
-      const response = await axios.get(
-        "https://onemarketapi.xyz/api/v1/service/services"
-      );
-      setService(response.data.services.slice(0, 3)); // Assuming the response structure is
-      // similar to your example
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to fetch lost items");
-      setLoading(false);
-    }
-  };
+  const { services, refreshAll, fetchServices } = useOthers();
 
-  useEffect(() => {
-    fetchServiceItems();
-  }, []); // Empty array to run only once when the component mounts
+  // Use the first 3 services from context
+  const displayedServices = services.slice(0, 3);
 
   return (
     <View style={{ padding: 16 }}>
@@ -264,7 +248,7 @@ const Services = () => {
         Services
       </Text>
       <FlatList
-        data={service}
+        data={displayedServices}
         keyExtractor={(item: Service) => item._id}
         horizontal
         showsHorizontalScrollIndicator={false}
