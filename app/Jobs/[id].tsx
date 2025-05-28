@@ -1,9 +1,10 @@
 import { useAuth } from "@/context/AuthContext";
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -70,6 +71,7 @@ interface selectedItem {
 const JobDetails = () => {
   const { id, title } = useLocalSearchParams<any>();
   const { userProfile } = useAuth();
+  const { jobApps, jobs } = useProduct();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -117,16 +119,16 @@ const JobDetails = () => {
     if (categorystate === "All Jobs") {
       if (!query) return jobsCreated;
 
-      return jobsCreated.filter(
-        (job: JobsCreated) =>
+      return jobs.filter(
+        (job: any) =>
           job.description?.toLowerCase().includes(query) ||
           job.jobTitle?.toLowerCase().includes(query)
       );
     } else {
       if (!query) return jobApplications;
 
-      return jobApplications.filter(
-        (application: JobApplication) =>
+      return jobApps.filter(
+        (application: any) =>
           application.briefWhy?.toLowerCase().includes(query) ||
           application.jobType?.toLowerCase().includes(query)
       );
@@ -233,41 +235,22 @@ setLoading(true)
     }
   };
 
-  const fetchJobApplications = async () => {
-    try {
-      const response = await axios.get(
-        "https://onemarketapi.xyz/api/v1/job/all"
-      );
-      setJobApplications(response.data.jobApplications);
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
-
-  const fetchJobsCreated = async () => {
-    try {
-      const response = await axios.get(
-        "https://onemarketapi.xyz/api/v1/job/all-jobs"
-      );
-      if (response.data.jobCreations.length > 0) {
-        setJobsCreated(response.data.jobCreations);
-        setLoading(false);
-      } else {
-        setLoading(false);
-        setJobsCreated([]);
-      }
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJobApplications();
-    fetchJobsCreated();
-  }, []);
+  // Sync local state with context data
+  React.useEffect(() => {
+    setJobsCreated(
+      (jobs || []).map((job: any) => ({
+        _id: job._id,
+        jobTitle: job.jobTitle,
+        companyName: job.companyName,
+        location: job.location,
+        salary: job.salary,
+        description: job.description,
+        jobImage: job.jobImage || [],
+      }))
+    );
+    setJobApplications(jobApps || []);
+    setLoading(false);
+  }, [jobs, jobApps]);
 
   const renderImagePreviews = () => {
     return (
@@ -605,13 +588,13 @@ setLoading(true)
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={styles.centered}>
+  //       <ActivityIndicator size="large" color="#007AFF" />
+  //     </View>
+  //   );
+  // }
 
   const renderJobItem = ({ item }: { item: any }) => (
     <View style={styles.card}>

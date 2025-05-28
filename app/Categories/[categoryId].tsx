@@ -1,6 +1,8 @@
+import { useProduct } from "@/context/ProductContext";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Predefined categories
@@ -81,35 +83,12 @@ const categoryId = () => {
   const category = allCategories.find((c) => c.text === categoryId);
   console.log(categoryId);
   const XAFconverter = 600;
-  const [products, setProducts] = useState<Product[]>([]);
+  const { products } = useProduct();
 
-  useEffect(() => {
-    if (category) {
-      fetch("https://onemarketapi.xyz/api/v1/product/get-all")
-        .then((res) => res.json())
-        .then((data) => {
-          // Check if data contains the 'products' key and it's an array
-          if (Array.isArray(data.products)) {
-            const filteredProducts = data.products.filter(
-              (product: Product) => {
-                // Check if category exists before filtering
-                if (product.category && product.category._id) {
-                  return product.category._id === category.id;
-                }
-                return false; // If no category._id, exclude this product
-              }
-            );
-            setProducts(filteredProducts);
-          } else {
-            console.error(
-              "API response does not contain products as an array",
-              data
-            );
-          }
-        })
-        .catch((err) => console.error("Failed to fetch products:", err));
-    }
-  }, [category]);
+  const filteredProducts = (products as unknown as Product[]).filter(
+    (product) =>
+      product.category && product.category._id === category?.id
+  );
 
   const handlecatitem = (item: Product) => {
     router.push(`/Product/${item._id}`);
@@ -156,6 +135,22 @@ const categoryId = () => {
           borderRadius: 5,
         }}
       >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            position: "absolute",
+            left: 10,
+            zIndex: 100,
+            backgroundColor: "white",
+            width: 30,
+            height: 30,
+            borderRadius: 20,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Icon source="arrow-left" size={24} color="black" />
+        </TouchableOpacity>
         <Image
           source={{ uri: category?.image }}
           style={{ width: 40, height: 40, borderRadius: 10 }}
@@ -181,7 +176,7 @@ const categoryId = () => {
           </View>
         </View>
         <FlatList
-          data={products}
+          data={filteredProducts}
           renderItem={renderProduct}
           keyExtractor={(item) => item._id.toString()}
           numColumns={2}

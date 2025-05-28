@@ -9,6 +9,7 @@ import {
   Alert,
   Button,
   Dimensions,
+  FlatList,
   Image,
   ScrollView,
   StyleSheet,
@@ -108,31 +109,29 @@ const CheckOut: React.FC = () => {
   const MAX_POLLING_ATTEMPTS = 12;
   const [paymentState, setPaymentState] = useState<PaymentStatus>("idle");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-    const [loading, setLoading] = useState(true);
-  
+  const [loading, setLoading] = useState(true);
+
   // Fetch user profile when the component is mounted
   // Initialize form with user data
-   useEffect(() => {
-     const loadProfile = async () => {
-       try {
-         await getUserProfile();
-         setLoading(false);
-       } catch (error) {
-         console.error("Failed to load profile:", error);
-         setLoading(false);
-       }
-     };
- 
-     loadProfile();
-   }, []);
- 
-   // Update form when userProfile changes
-   useEffect(() => {
-     if (userProfile) {
-       
-       
-     }
-   }, [userProfile]);
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        await getUserProfile();
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  // Update form when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+    }
+  }, [userProfile]);
   const prepareOrderData = (): OrderSubmissionData => {
     const itemPrice = cartItems.reduce(
       (total: number, item: CartItem) => total + item.price * item.quantity,
@@ -442,9 +441,6 @@ const CheckOut: React.FC = () => {
                       setShippingInfo({ ...shippingInfo, address: "" })
                     }
                     clearButtonVisible={!!shippingInfo.address}
-                    
-                    
-                
                   />
 
                   <CityField
@@ -596,8 +592,6 @@ const CheckOut: React.FC = () => {
                           helperText="Please enter your Orange Number"
                           onClear={() => setMobileMoneyNumber("")}
                           clearButtonVisible={!!mobileMoneyNumber}
-                         
-                          
                         />
                       )}
                       {mobileMoneyPaymentMethod === "MTN" && (
@@ -609,8 +603,6 @@ const CheckOut: React.FC = () => {
                           helperText="Please enter your MTN number"
                           onClear={() => setMobileMoneyNumber("")}
                           clearButtonVisible={!!mobileMoneyNumber}
-                         
-                          
                         />
                       )}
                     </View>
@@ -635,122 +627,134 @@ const CheckOut: React.FC = () => {
           {activeSection === 2 && (
             <>
               <Text style={styles.sectionTitle}>Review Order</Text>
-               <ScrollView
-        style={{ maxHeight: "100%" }} // Adjust maxHeight as needed
-        contentContainerStyle={{ paddingBottom: 20 }}
-        showsVerticalScrollIndicator={true}
-      >
-              <View style={styles.reviewContainer}>
-                {/* Shipping Address */}
-                <View style={styles.reviewItem}>
-                  <Text style={styles.reviewTitle}>Shipping Address:</Text>
-                  <View>
+              <ScrollView
+                style={{ maxHeight: "100%" }} // Adjust maxHeight as needed
+                contentContainerStyle={{ paddingBottom: 20 }}
+                showsVerticalScrollIndicator={true}
+              >
+                <View style={styles.reviewContainer}>
+                  {/* Shipping Address */}
+                  <View style={styles.reviewItem}>
+                    <Text style={styles.reviewTitle}>Shipping Address:</Text>
                     <View>
-                      <Text style={{ fontWeight: "bold" }}>Email/Phone:</Text>
-                      <Text style={styles.reviewDetail}>
-                        {shippingInfo.address}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={{ fontWeight: "bold" }}>City:</Text>
-                      <Text style={styles.reviewDetail}>
-                        {shippingInfo.city}
-                      </Text>
-                    </View>
-                  </View>
-                  <View>
-                    <View>
-                      <Text style={{ fontWeight: "bold" }}>Quarter:</Text>
-                      <Text style={styles.reviewDetail}>
-                        {shippingInfo.postalCode}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={{ fontWeight: "bold" }}>Country:</Text>
-                      <Text style={styles.reviewDetail}>
-                        {shippingInfo.country}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Items in Cart */}
-                <View style={styles.reviewItem}>
-                  <Text style={styles.reviewTitle}>Items in Cart:</Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      height: 120, // Set a fixed height
-                      overflow: "hidden", // Use hidden instead of scroll
-                    }}
-                  >
-                    {cartItems.map((item: CartItem) => (
-                      <View
-                        key={item._id}
-                        style={[
-                          styles.cartItem,
-                          {
-                            marginRight: 10, // Add spacing between items
-                            width: 100, // Set a fixed width for each item
-                          },
-                        ]}
-                      >
-                        <Image
-                          source={{ uri: item.images[0].url }}
-                          style={{ height: 80, width: 80, alignSelf: "center" }}
-                        />
-                        <Text style={styles.cartItemText} numberOfLines={2}>
-                          {item.name}
-                        </Text>
-                        <Text>
-                          XAF{item.price} x {item.quantity}
+                      <View>
+                        <Text style={{ fontWeight: "bold" }}>Email/Phone:</Text>
+                        <Text style={styles.reviewDetail}>
+                          {shippingInfo.address}
                         </Text>
                       </View>
-                    ))}
+                      <View>
+                        <Text style={{ fontWeight: "bold" }}>City:</Text>
+                        <Text style={styles.reviewDetail}>
+                          {shippingInfo.city}
+                        </Text>
+                      </View>
+                    </View>
+                    <View>
+                      <View>
+                        <Text style={{ fontWeight: "bold" }}>Quarter:</Text>
+                        <Text style={styles.reviewDetail}>
+                          {shippingInfo.postalCode}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text style={{ fontWeight: "bold" }}>Country:</Text>
+                        <Text style={styles.reviewDetail}>
+                          {shippingInfo.country}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
 
-                {/* Summary */}
-                <View style={styles.reviewItem}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      maxWidth: "95%",
-                    }}
-                  >
-                    <Text style={styles.reviewTitle}>Shipping Fees:</Text>
-                    <Text style={styles.reviewDetail}>XAF{shippingFees}</Text>
+                  {/* Items in Cart */}
+                  <View style={styles.reviewItem}>
+                    <Text style={styles.reviewTitle}>Items in Cart:</Text>
+                    <FlatList
+                      data={cartItems}
+                      keyExtractor={(item) => item._id}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={{ maxHeight: height * 0.19 }}
+                      contentContainerStyle={{ alignItems: "center" }}
+                      renderItem={({ item }) => (
+                        <View
+                          style={[
+                            styles.cartItem,
+                            {
+                              marginRight: width * 0.03,
+                              width: width * 0.22,
+                            },
+                          ]}
+                        >
+                          <View
+                            style={{
+                              padding: width * 0.015,
+                              backgroundColor: "#fff",
+                              borderRadius: width * 0.03,
+                            }}
+                          >
+                            <Image
+                              source={{ uri: item.images[0].url }}
+                              style={{
+                                height: height * 0.10,
+                                width: width * 0.20,
+                                alignSelf: "center",
+                                borderRadius: width * 0.025,
+                              }}
+                              resizeMode="cover"
+                            />
+                          </View>
+                          <Text style={styles.cartItemText} numberOfLines={2}>
+                            {item.name}
+                          </Text>
+                          <Text>
+                            XAF{item.price} x {item.quantity}
+                          </Text>
+                        </View>
+                      )}
+                    />
                   </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      maxWidth: "95%",
-                    }}
-                  >
-                    <Text style={styles.reviewTitle}>Total:</Text>
-                    <Text style={styles.totalPrice}>
-                      XAF{calculateTotalPrice()}
-                    </Text>
-                    {/* payment method */}
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <Text style={[styles.reviewDetail, { fontWeight: "bold" }]}>
-                      {paymentMethod}
-                    </Text>
-                  </View>
-                </View>
 
-                {/* Buttons */}
+                  {/* Summary */}
+                  <View style={styles.reviewItem}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        maxWidth: "95%",
+                      }}
+                    >
+                      <Text style={styles.reviewTitle}>Shipping Fees:</Text>
+                      <Text style={styles.reviewDetail}>XAF{shippingFees}</Text>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        maxWidth: "95%",
+                      }}
+                    >
+                      <Text style={styles.reviewTitle}>Total:</Text>
+                      <Text style={styles.totalPrice}>
+                        XAF{calculateTotalPrice()}
+                      </Text>
+                      {/* payment method */}
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <Text style={[styles.reviewDetail, { fontWeight: "bold" }]}>
+                        {paymentMethod}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Buttons */}
+                </View>
                 <View style={styles.buttonContainer}>
-                
                   <TouchableOpacity
                     onPress={async () => {
                       if (isSubmitting || isProcessingPayment) return;
@@ -792,7 +796,7 @@ const CheckOut: React.FC = () => {
                     <Text style={{ color: "white" }}>Previous</Text>
                   </TouchableOpacity>
                 </View>
-              </View></ScrollView>
+              </ScrollView>
             </>
           )}
         </View>
@@ -803,196 +807,197 @@ const CheckOut: React.FC = () => {
 
 const styles = StyleSheet.create({
   mobileMoneyContainer: {
-    marginTop: 15,
-    padding: 15,
+    marginTop: height * 0.02,
+    padding: width * 0.04,
     backgroundColor: "#F5F5F5",
-    borderRadius: 10,
+    borderRadius: width * 0.025,
   },
   providerTitle: {
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: height * 0.01,
     color: "#333",
   },
   providerButtonContainer: {
+    position: "absolute",
+    bottom: height * 0.01,
+    right: width * 0.01,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 15,
-    marginBottom: 15,
+    gap: width * 0.04,
+    marginBottom: height * 0.015,
   },
   providerButton: {
-    padding: 10,
-    borderRadius: 10,
+    padding: width * 0.025,
+    borderRadius: width * 0.025,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
   providerLogo: {
-    width: 100,
-    height: 50,
+    width: width * 0.25,
+    height: height * 0.06,
   },
   mobileMoneyDetailsContainer: {
-    marginBottom: 15,
+    marginBottom: height * 0.015,
   },
   mobileMoneyInput: {
-    height: 50,
+    height: height * 0.06,
     borderColor: "#E0E0E0",
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 10,
+    borderRadius: width * 0.02,
+    paddingHorizontal: width * 0.04,
+    marginBottom: height * 0.01,
     backgroundColor: "white",
   },
   numberVerificationContainer: {
     backgroundColor: "white",
-    padding: 15,
-    borderRadius: 10,
+    padding: width * 0.04,
+    borderRadius: width * 0.025,
   },
   verificationTitle: {
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: height * 0.01,
     color: "#333",
   },
   radioContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 10,
+    marginBottom: height * 0.01,
   },
   radioOption: {
     flexDirection: "row",
     alignItems: "center",
   },
   radioLabel: {
-    marginLeft: 5,
+    marginLeft: width * 0.01,
   },
   verificationNote: {
     color: "#4CAF50",
-    fontSize: 12,
+    fontSize: width * 0.03,
     textAlign: "center",
   },
   container: {
-    padding: 20,
-    paddingTop: 40,
+    padding: width * 0.05,
+    paddingTop: height * 0.05,
     height: height,
   },
   progressBar: {
-    marginBottom: 20,
+    marginBottom: height * 0.025,
   },
-
   formSection: {
-    marginBottom: 20,
+    marginBottom: height * 0.025,
   },
   input: {
-    height: 40,
+    height: height * 0.05,
     borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
-    marginBottom: 10,
-    fontSize: width > 600 ? 16 : 14,
+    borderRadius: width * 0.015,
+    paddingLeft: width * 0.025,
+    marginBottom: height * 0.012,
+    fontSize: width * 0.04,
   },
   paymentLabel: {
-    fontSize: width > 600 ? 18 : 16,
-    marginBottom: 10,
+    fontSize: width * 0.045,
+    marginBottom: height * 0.012,
   },
   radioGroup: {
-    marginBottom: 20,
+    marginBottom: height * 0.025,
   },
   radioItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: height * 0.012,
   },
-
   section: {
     marginBottom: 0,
   },
   sectionTitle: {
-    fontSize: width > 600 ? 22 : 18,
+    fontSize: width * 0.055,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: height * 0.018,
     color: "#333",
   },
   reviewContainer: {
-    padding: 15,
+    padding: width * 0.04,
     backgroundColor: "#f9f9f9",
-    borderRadius: 8,
+    borderRadius: width * 0.025,
     borderWidth: 1,
     borderColor: "#ddd",
-    marginTop: 10,
+    marginTop: height * 0.012,
   },
   reviewItem: {
-    marginBottom: 15,
+    marginBottom: height * 0.018,
   },
   reviewTitle: {
-    fontSize: 18,
+    fontSize: width * 0.045,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 5,
+    marginBottom: height * 0.006,
   },
   reviewDetail: {
-    fontSize: 16,
+    fontSize: width * 0.04,
     color: "#555",
-    marginBottom: 5,
+    marginBottom: height * 0.006,
   },
   totalPrice: {
-    fontSize: 18,
+    fontSize: width * 0.05,
     fontWeight: "bold",
     color: "#4CAF50",
-    marginBottom: 15,
+    marginBottom: height * 0.018,
   },
   cartItem: {
-    width: "45%", // Slightly less than half to allow for some spacing
-    marginBottom: 15,
+    width: width * 0.22,
+    marginBottom: height * 0.018,
     alignItems: "center",
-    padding: 5,
+    padding: width * 0.012,
     backgroundColor: "#f9f9f9",
-    borderRadius: 8,
+    borderRadius: width * 0.025,
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
   cartItemText: {
-    fontSize: 14,
+    fontSize: width * 0.035,
     color: "#555",
-    marginTop: 5,
+    marginTop: height * 0.006,
     textAlign: "center",
-    maxWidth: 120,
+    maxWidth: width * 0.3,
   },
   buttonContainer: {
-    marginTop: 20,
+    marginTop: height * 0.025,
     flexDirection: "row",
     justifyContent: "space-between",
   },
   statusContainer: {
-    marginTop: 10,
-    borderRadius: 5,
-    padding: 10,
+    marginTop: height * 0.012,
+    borderRadius: width * 0.015,
+    padding: width * 0.025,
   },
   statusPending: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFA500",
-    padding: 10,
-    borderRadius: 5,
+    padding: width * 0.025,
+    borderRadius: width * 0.015,
   },
   statusSuccess: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 5,
+    padding: width * 0.025,
+    borderRadius: width * 0.015,
   },
   statusFailed: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F44336",
-    padding: 10,
-    borderRadius: 5,
+    padding: width * 0.025,
+    borderRadius: width * 0.015,
   },
   statusText: {
     color: "white",
-    marginLeft: 10,
+    marginLeft: width * 0.025,
   },
 });
 

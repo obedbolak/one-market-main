@@ -7,13 +7,13 @@ import { useProduct } from "@/context/ProductContext";
 
 import {
   Dimensions,
+  FlatList,
   Image,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Banner from "../Main/Banner";
@@ -39,9 +39,45 @@ interface Product {
 const { width, height } = Dimensions.get("window");
 const PRODUCTS_PER_PAGE = 6;
 
+
 // Skeleton component
 const SkeletonPlaceholder = ({ style }: { style: object }) => (
   <View style={[styles.skeleton, style]} />
+);
+
+const TABS = [
+  { key: "products", label: "Products" },
+  { key: "services", label: "Services" },
+  { key: "jobs", label: "Jobs" },
+  { key: "jobApps", label: "Job Seekers" },
+  { key: "lostItems", label: "Lost Items" },
+];
+
+interface TabBarProps {
+  activeTab: string;
+  setActiveTab: (tabKey: string) => void;
+  counts: { [key: string]: number };
+}
+
+const TabBar: React.FC<TabBarProps> = ({ activeTab, setActiveTab, counts }) => (
+  <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
+    {TABS.map((tab) => (
+      <TouchableOpacity
+        key={tab.key}
+        onPress={() => setActiveTab(tab.key)}
+        style={{
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          borderBottomWidth: activeTab === tab.key ? 2 : 0,
+          borderBottomColor: "#007BFF",
+        }}
+      >
+        <Text style={{ fontWeight: activeTab === tab.key ? "bold" : "normal" }}>
+          {tab.label} ({counts[tab.key]})
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
 );
 
 export default function HomeScreen() {
@@ -49,13 +85,91 @@ export default function HomeScreen() {
   const [visibleProductCount, setVisibleProductCount] =
     useState(PRODUCTS_PER_PAGE);
   const { userProfile, getUserProfile, tokenAvailable } = useAuth();
-  const { products, loading, error, refreshData } = useProduct();
-  
+  const { products, loading, error, refreshData,services, jobs, jobApps, lostItems } = useProduct();
+    const [activeTab, setActiveTab] = useState("products");
+
   const [isModalVisible, setModalVisible] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   // const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  const filteredProducts = products.filter(
+  (product) =>
+    (product.name?.toLowerCase() || "").includes(debouncedSearchQuery.toLowerCase()) ||
+    (product.description?.toLowerCase() || "").includes(debouncedSearchQuery.toLowerCase())
+);
+
+const filteredServices = services.filter(
+  (service) =>
+    (service.name?.toLowerCase() || "").includes(debouncedSearchQuery.toLowerCase()) ||
+    (service.description?.toLowerCase() || "").includes(debouncedSearchQuery.toLowerCase())
+);
+
+const filteredJobs = jobs.filter(
+  (job) =>
+    (job.title?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+    (job.description?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+);
+
+const filteredJobApps = jobApps.filter(
+  (jobApp) =>
+    (jobApp.firstName?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+    (jobApp.jobType?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+);
+
+const filteredLostItems = lostItems.filter(
+  (lostItem) =>
+    (lostItem.itemName?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+    (lostItem.description?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+);
+
+const counts = {
+  products: filteredProducts.length,
+  services: filteredServices.length,
+  jobs: filteredJobs.length,
+  jobApps: filteredJobApps.length,
+  lostItems: filteredLostItems.length,
+};
+
+  const getTabData = () => {
+    switch (activeTab) {
+      case "products":
+        return { data: filteredProducts, label: "Products" };
+      case "services":
+        return { data: filteredServices, label: "Services" };
+      case "jobs":
+        return { data: filteredJobs, label: "Jobs" };
+      case "jobApps":
+        return { data: filteredJobApps, label: "Job Seekers" };
+      case "lostItems":
+        return { data: filteredLostItems, label: "Lost Items" };
+      default:
+        return { data: filteredProducts, label: "Products" };
+    }
+  };
+
+  const { data: tabData, label: tabLabel } = getTabData();
+
+  useEffect(() => {
+  if (!searchQuery && activeTab !== "products") {
+    setActiveTab("products");
+  }
+}, [searchQuery]);
+
+useEffect(() => {
+  const handler = setTimeout(() => {
+    setDebouncedSearchQuery(searchQuery);
+  }, 350); // 350ms debounce
+
+  return () => clearTimeout(handler);
+}, [searchQuery]);
+
+const handleResultPress = useCallback((item: Product) => {
+    router.push(`/Product/${item._id}`);
+  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -155,116 +269,269 @@ export default function HomeScreen() {
     );
   }
 
+  const renderItemForActiveTab = ({ item }: { item: any }) => {
+    switch (activeTab) {
+      case "products":
+        return (
+          <TouchableOpacity
+            style={styles.resultItem}
+            onPress={() => handleResultPress(item as Product)}
+          >
+            <Image
+              source={{ uri: (item as Product).images?.[0]?.url || "https://via.placeholder.com/60" }}
+              style={styles.resultImage}
+            />
+            <View style={styles.resultTextContainer}>
+              <Text style={styles.resultText} numberOfLines={2}>
+                {(item as Product).name}
+              </Text>
+              <Text style={styles.resultDescription} numberOfLines={2}>
+                {(item as Product).description}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      case "services":
+        return (
+          <TouchableOpacity
+            style={styles.resultItem}
+            onPress={() => {/* handle service press if needed */}}
+          >
+            <Image
+              source={{ uri: item.images?.[0]?.url || "https://via.placeholder.com/60" }}
+              style={styles.resultImage}
+            />
+            <View style={styles.resultTextContainer}>
+              <Text style={styles.resultText} numberOfLines={2}>
+                {item.name}
+              </Text>
+              <Text style={styles.resultDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      case "jobs":
+        return (
+          <TouchableOpacity
+            style={styles.resultItem}
+            onPress={() => {/* handle job press if needed */}}
+          >
+            <View style={styles.resultTextContainer}>
+              <Text style={styles.resultText} numberOfLines={2}>
+                {item.jobTitle || item.title}
+              </Text>
+              <Text style={styles.resultDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      case "jobApps":
+        return (
+          <TouchableOpacity
+            style={styles.resultItem}
+            onPress={() => {/* handle job application press if needed */}}
+          >
+            <View style={styles.resultTextContainer}>
+              <Text style={styles.resultText} numberOfLines={2}>
+                {item.firstName} {item.lastName}
+              </Text>
+              <Text style={styles.resultDescription} numberOfLines={2}>
+                {item.jobType}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      case "lostItems":
+        return (
+          <TouchableOpacity
+            style={styles.resultItem}
+            onPress={() => {/* handle lost item press if needed */}}
+          >
+            <Image
+              source={{ uri: item.images?.[0]?.url || "https://via.placeholder.com/60" }}
+              style={styles.resultImage}
+            />
+            <View style={styles.resultTextContainer}>
+              <Text style={styles.resultText} numberOfLines={2}>
+                {item.itemName}
+              </Text>
+              <Text style={styles.resultDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderProductItem = ({ item }: { item: Product }) => (
+    <TouchableOpacity
+      key={item._id}
+      style={styles.productContainer}
+      onPress={() => handleProductDetails(item)}
+    >
+      <View>
+        <Image
+          source={{
+            uri: item.images[0]?.url || "https://via.placeholder.com/150",
+          }}
+          style={styles.productImage}
+        />
+        <Text numberOfLines={2} style={styles.productName}>
+          {item.name}
+        </Text>
+        <Text numberOfLines={2} style={styles.productDescription}>
+          {item.description}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   // Render the appropriate screen based on the user's role
   return (
-    <>
-      <SafeAreaView>
-        {!tokenAvailable && (
-          <View style={styles.authButtonsContainer}>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-              <TouchableOpacity
-                onPress={handlesignup}
-                style={styles.authButton}
-              >
-                <Text style={styles.authButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handlesignin}
-                style={styles.authButton}
-              >
-                <Text style={styles.authButtonText}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      {!tokenAvailable && (
+        <View style={styles.authButtonsContainer}>
+          <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
+            <TouchableOpacity
+              onPress={handlesignup}
+              style={styles.authButton}
+            >
+              <Text style={styles.authButtonText}>Sign Up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handlesignin}
+              style={styles.authButton}
+            >
+              <Text style={styles.authButtonText}>Sign In</Text>
+            </TouchableOpacity>
           </View>
-        )}
+        </View>
+      )}
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
+      {debouncedSearchQuery  ? (
+        <FlatList
+          key="search-list" // <-- Add a unique key for search results
+          data={tabData}
+          keyExtractor={(item) => item._id}
+          renderItem={renderItemForActiveTab}
+          ListHeaderComponent={
+            <>
+              <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+              <TabBar activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} />
+              <Text style={styles.resultHeaderText}>
+                {tabData.length} result{tabData.length !== 1 ? "s" : ""}
+              </Text>
+            </>
+          }
+          ListEmptyComponent={
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>No results found</Text>
+            </View>
+          }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-        >
-          <Header />
-          <Banner />
-          <List />
-
-          <View style={styles.titleContainer}>
-            <ThemedText type="title" style={{ fontSize: 20, paddingLeft: 20 }}>
-              {loading ? (
-                <SkeletonPlaceholder style={styles.titleSkeleton} />
-              ) : (
-                `All Products (${products.length})`
+        />
+      ) : (
+        <FlatList
+          key="products-list" // <-- Add a unique key for products grid
+          data={products.slice(0, visibleProductCount)}
+          keyExtractor={(item) => item._id}
+          renderItem={renderProductItem}
+          numColumns={2}
+          ListHeaderComponent={
+            <>
+              <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+              <Banner />
+              <List />
+              <View style={styles.titleContainer}>
+                <ThemedText type="title" style={{ fontSize: 20, paddingLeft: 20 }}>
+                  {loading ? (
+                    <SkeletonPlaceholder style={styles.titleSkeleton} />
+                  ) : (
+                    `All Products (${products.length})`
+                  )}
+                </ThemedText>
+              </View>
+            </>
+          }
+          ListFooterComponent={
+            <>
+              {!loading && products.length > PRODUCTS_PER_PAGE && (
+                <TouchableOpacity
+                  style={styles.showMoreButton}
+                  onPress={allProductsShown ? handleShowLess : handleShowMore}
+                >
+                  <Text style={styles.showMoreButtonText}>
+                    {allProductsShown ? "Show Less" : "Show More"}
+                  </Text>
+                </TouchableOpacity>
               )}
-            </ThemedText>
-          </View>
-
-          <ScrollView
-            contentContainerStyle={styles.productList}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.productGrid}>
-              {loading
-                ? // Show skeleton placeholders while loading
-                  [...Array(6)].map((_, i) => (
-                    <View key={i} style={styles.productContainer}>
-                      <SkeletonPlaceholder
-                        style={styles.productImageSkeleton}
-                      />
-                      <SkeletonPlaceholder style={styles.productTextSkeleton} />
-                      <SkeletonPlaceholder
-                        style={styles.productTextSkeletonShort}
-                      />
-                    </View>
-                  ))
-                : // Show actual products when loaded
-                  (products as Product[]).slice(0, visibleProductCount).map((product) => (
-                    <TouchableOpacity
-                      key={product._id}
-                      style={styles.productContainer}
-                      onPress={() => handleProductDetails(product)}
-                    >
-                      <View>
-                        <Image
-                          source={{
-                            uri:
-                              product.images[0]?.url ||
-                              "https://via.placeholder.com/150",
-                          }}
-                          style={styles.productImage}
-                        />
-                        <Text numberOfLines={2} style={styles.productName}>
-                          {product.name}
-                        </Text>
-                        <Text
-                          numberOfLines={2}
-                          style={styles.productDescription}
-                        >
-                          {product.description}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-            </View>
-
-            {!loading && products.length > PRODUCTS_PER_PAGE && (
-              <TouchableOpacity
-                style={styles.showMoreButton}
-                onPress={allProductsShown ? handleShowLess : handleShowMore}
-              >
-                <Text style={styles.showMoreButtonText}>
-                  {allProductsShown ? "Show Less" : "Show More"}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
-          <Footer />
-        </ScrollView>
-      </SafeAreaView>
-    </>
+              <Footer />
+            </>
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.productList}
+        />
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+
+    resultItem: {
+    padding: 15,
+    borderBottomColor: "#eee",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+  },
+  resultImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+  },
+  resultTextContainer: {
+    flex: 1,
+  },
+  resultText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  resultDescription: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 4,
+  },
+  resultHeaderText: {
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    color: "#888",
+    fontWeight: "bold",
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  noResultsContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  noResultsText: {
+    color: "#888",
+    fontSize: 16,
+  },
   // Existing styles...
   modalBackground: {
     flex: 1,
@@ -306,7 +573,7 @@ const styles = StyleSheet.create({
   },
   productList: {
     marginTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 0,
   },
   productGrid: {
     flexDirection: "row",
@@ -324,6 +591,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 5 },
+    marginHorizontal: 5,
+    
   },
   productImage: {
     height: 150,
@@ -347,6 +616,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginHorizontal: 20,
     alignItems: "center",
+    marginBottom: 20,
   },
   showMoreButtonText: {
     fontWeight: "bold",
@@ -354,10 +624,10 @@ const styles = StyleSheet.create({
   },
   authButtonsContainer: {
     position: "absolute",
-    top: height * 0.85,
+  top: height * 0.91,
     right: 10,
     zIndex: 100,
-    width: 170,
+    width: 160,
     backgroundColor: "rgba(0,0,0, .1)",
     height: 60,
     borderRadius: 20,

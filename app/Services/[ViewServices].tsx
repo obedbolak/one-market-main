@@ -1,4 +1,4 @@
-import { useOthers } from "@/context/OthersContext"; // Make sure this import exists
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useLocalSearchParams } from "expo-router";
@@ -74,7 +74,7 @@ const ViewServices = () => {
     id: string;
     category: string;
   }>();
-  const { services } = useOthers(); // <-- Use services from context
+  const { services } = useProduct(); // <-- Use services from context
 
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);

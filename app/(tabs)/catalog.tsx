@@ -166,6 +166,7 @@ const Catalog = () => {
           numColumns={2}
           columnWrapperStyle={styles.productRow}
           contentContainerStyle={styles.productList}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -294,7 +295,8 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   productList: {
-    paddingBottom: 20,
+    paddingBottom: 200,
+    
   },
   productRow: {
     justifyContent: 'space-between',

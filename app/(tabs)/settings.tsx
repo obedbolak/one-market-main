@@ -38,7 +38,6 @@ const settings = () => {
         <Text style={[styles.title, { color: "#16a34a" }]}>
           Hi, {capitalizeWords(userProfile?.name)}
         </Text>
-        <Text style={styles.title}>Dashboard </Text>
       </View>
 
       <ScrollView

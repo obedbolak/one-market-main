@@ -281,7 +281,7 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
           style={{
             position: 'absolute',
             bottom: 12,
-            left: 12,
+            right: 0,
             flexDirection: 'row',
             alignItems: 'center',
             gap: 4,

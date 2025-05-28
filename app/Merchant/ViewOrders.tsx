@@ -465,18 +465,20 @@ const VendorDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    
     backgroundColor: "#fff",
   },
   container: {
-    padding: 16,
+    padding: 1,
     backgroundColor: "#fff",
+    marginTop: -40,
   },
   filterButtons: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 20,
-    gap: 8,
+    gap: 1,
   },
   filterButton: {
     padding: 10,

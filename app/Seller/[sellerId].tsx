@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -51,28 +52,27 @@ interface Product {
 }
 
 const SellerComponent: React.FC = () => {
-  const { sellerId } = useLocalSearchParams(); // Get the sellerId from the route params
-
+  const { sellerId } = useLocalSearchParams();
+  const { products } = useProduct(); // Get products from context
   const [seller, setSeller] = useState<Seller | null>(null);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const { userProfile } = useAuth();
 
-  // Fetch the seller and their products data
+  // Fetch the seller data
   useEffect(() => {
-    const fetchSellerAndProducts = async () => {
+    const fetchSeller = async () => {
       setLoading(true);
-      setError(null); // Reset error state on each fetch attempt
+      setError(null);
 
       try {
-        // Step 1: Fetch all sellers
+        // Fetch all sellers
         const sellerResponse = await fetch(
           "https://onemarketapi.xyz/api/v1/user/getusers"
         );
         const sellerData = await sellerResponse.json();
 
-        // Find the seller matching the sellerId (the _id field in the response)
+        // Find the seller matching the sellerId
         const matchedSeller = sellerData.find(
           (s: Seller) => s._id === sellerId
         );
@@ -84,19 +84,6 @@ const SellerComponent: React.FC = () => {
         }
 
         setSeller(matchedSeller);
-
-        // Step 2: Fetch all products
-        const productResponse = await fetch(
-          "https://onemarketapi.xyz/api/v1/product/get-all"
-        );
-        const productData = await productResponse.json();
-
-        // Filter products by sellerId
-        const sellerProducts = productData.products.filter(
-          (product: Product) => product.sellerId === sellerId
-        );
-
-        setFilteredProducts(sellerProducts);
       } catch (err) {
         setError("Failed to fetch data.");
       } finally {
@@ -104,8 +91,13 @@ const SellerComponent: React.FC = () => {
       }
     };
 
-    fetchSellerAndProducts();
+    fetchSeller();
   }, [sellerId]);
+
+  // Filter products from context by sellerId
+  const filteredProducts = ((products as unknown) as Product[]).filter(
+    (product) => product.sellerId === sellerId
+  );
 
   // Handle product click (Navigate to product details)
   const handleItemDetails = (item: Product) => {

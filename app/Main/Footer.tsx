@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
 
       {/* Copyright information */}
       <Text style={styles.copyrightText}>
-        © {new Date().getFullYear()} 1P. All rights reserved.
+        © {new Date().getFullYear()} V-Market. All rights reserved.
       </Text>
     </View>
   );

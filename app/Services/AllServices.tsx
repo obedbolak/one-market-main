@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { useOthers } from "@/context/OthersContext";
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
@@ -205,7 +205,7 @@ const AllServices: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>(
     categoryList ? categoryList : "All"
   );
-  const { services, refreshAll, fetchServices } = useOthers();
+  const { services } = useProduct();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -278,7 +278,6 @@ const AllServices: React.FC = () => {
     fetchProperties();
     fetchDrugs();
     fetchTransport();
-    console.log(services);
   }, []);
 
   const ServiceCard: React.FC<ServiceCardProps> = ({ item }) => (

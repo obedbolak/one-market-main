@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { useProduct } from "@/context/ProductContext";
+import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
@@ -64,7 +65,7 @@ interface Order {
   _id: string;
   Uid: string;
   itemPrice: number;
-  orderItems: OrderItem[];
+  orderItems: OrderItem[]; // <-- This line ensures orderItems exists on Order
   paymentInfo: PaymentInfo;
   paymentMethod: string;
   shippingCharges: number;
@@ -100,19 +101,20 @@ interface GroupedMessages {
   [key: string]: Message[];
 }
 
-const Header: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
+interface HeaderProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isModalNotificationVisible, setIsModalNotificationVisible] =
     useState<boolean>(false);
-  const [products, setProducts] = useState<Product[]>([]);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [modalSearchQuery, setModalSearchQuery] = useState<string>("");
   const cartItems = useSelector((state: any) => state.cart.items);
   const { userProfile, getUserProfile } = useAuth();
   const [isSeller, setIsSeller] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
   const [showOrders, setShowOrders] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<Boolean>(false);
@@ -343,57 +345,12 @@ const Header: React.FC = () => {
     }
   }, [userProfile?._id, isConnected]);
 
- 
-
-  const fetchOrders = async (): Promise<void> => {
-    if (!userProfile?._id) {
-      return;
-    }
-
-    setIsLoadingOrders(true);
-    setOrdersError(null);
-
-    try {
-      const response = await axios.get<{
-        filter(arg0: (order: any) => any): unknown;
-        data: Order[];
-      }>("https://onemarketapi.xyz/api/v1/orders/all-orders");
-
-      if (response.data) {
-        const vendorOrders = response.data.filter((order) =>
-          order.orderItems.some(
-            (item: OrderItem) => item.sellerId === userProfile._id
-          )
-        );
-
-        setOrders(vendorOrders);
-        setFilteredOrders(vendorOrders);
-      } else {
-        setOrdersError("No orders found or failed to fetch orders.");
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setOrdersError("An error occurred while fetching orders.");
-    } finally {
-      setIsLoadingOrders(false);
-    }
-  };
+  const { products, orders } = useProduct();
 
   const userOrders = orders.filter((order) => order.Uid === userProfile?._id);
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const response = await fetch(
-        "https://onemarketapi.xyz/api/v1/product/get-all"
-      );
-      const data = await response.json();
-      if (data.success) {
-        setProducts(data.products);
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  }, []);
+  const sellerOrders = orders.filter(order =>
+    order.orderItems.some((item: { sellerId: string | undefined; }) => item.sellerId === userProfile?._id)
+  );
 
   useEffect(() => {
     getUserProfile();
@@ -401,12 +358,10 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     if (userProfile?._id !== null) {
-      fetchProducts();
-      fetchOrders();
       const intervalId = setInterval(() => {}, 5000);
       return () => clearInterval(intervalId);
     }
-  }, [userProfile?._id, fetchOrders, fetchProducts]);
+  }, [userProfile?._id]);
 
   const groupMessages = useCallback(
     (messages: Message[]): GroupedMessages => {
@@ -487,9 +442,7 @@ const Header: React.FC = () => {
       );
 
       if (response.data.success) {
-        setOrders((prevOrders) =>
-          prevOrders.filter((order) => order._id !== orderId)
-        );
+        
         alert("Order has been canceled successfully!");
       } else {
         alert("Failed to cancel the order. Please try again later.");
@@ -518,7 +471,12 @@ const Header: React.FC = () => {
       </TouchableOpacity>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      <View
+        style={[
+          styles.searchContainer,
+          { borderColor: "#E5E7EB", borderWidth: 1, backgroundColor: "#FAFAFA" },
+        ]}
+      >
         <Ionicons
           name="search"
           size={20}
@@ -528,11 +486,21 @@ const Header: React.FC = () => {
         <TextInput
           style={styles.searchBar}
           value={searchQuery}
-          onChangeText={handleSearchChange}
+          onChangeText={setSearchQuery}
           placeholder="Search products..."
           placeholderTextColor="#888"
           onFocus={() => setIsModalVisible(true)}
+          clearButtonMode="never" // We'll use our own clear button
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            style={styles.clearButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="close-circle" size={20} color="#888" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Action Icons */}
@@ -567,10 +535,21 @@ const Header: React.FC = () => {
             )}
           </View>
         </TouchableOpacity>
+
+        {/* 3-dots vertical menu */}
+  <TouchableOpacity
+    style={styles.iconButton}
+    onPress={() => {
+      // Open menu/modal here
+      alert("More options coming soon!");
+    }}
+  >
+    <Entypo name="dots-three-vertical" size={22} color="#555" />
+  </TouchableOpacity>
       </View>
 
       {/* Search Modal */}
-      <Modal
+      {/* <Modal
         animationType="fade"
         transparent={true}
         visible={isModalVisible}
@@ -638,7 +617,7 @@ const Header: React.FC = () => {
             </BlurView>
           </View>
         </TouchableWithoutFeedback>
-      </Modal>
+      </Modal> */}
 
       {/* Notifications/Orders Modal */}
       <Modal
@@ -670,7 +649,7 @@ const Header: React.FC = () => {
 
                 <TouchableOpacity onPress={toggleShowOrders}>
                   <Text style={styles.notificationHeaderText}>
-                    <Text style={{ color: "orange" }}>({orders.length})</Text>
+                    <Text style={{ color: "orange" }}>({sellerOrders.length})</Text>
                     Orders
                   </Text>
                 </TouchableOpacity>
@@ -888,8 +867,8 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
+    justifyContent: "space-around",
+    paddingHorizontal: 10,
     paddingVertical: 12,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderBottomWidth: 1,
@@ -921,7 +900,7 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 1,
   },
   iconButton: {
     padding: 6,
@@ -1204,6 +1183,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
+  },
+  clearButton: {
+    position: "absolute",
+    right: 10,
   },
 });
 

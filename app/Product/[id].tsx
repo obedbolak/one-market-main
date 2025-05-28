@@ -77,27 +77,7 @@ const ProductDetails = () => {
   const [formattedMessages, setFormattedMessages] = useState<
     { content: string; timestamp: string; userId: string }[]
   >([]);
-  // const roomId = selectedProduct && userProfile 
-  //   ? `${selectedProduct._id}_${userProfile._id}_${selectedProduct.sellerId}`
-  //   : "";
-
-  // Fetch products on mount
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         "https://onemarketapi.xyz/api/v1/product/get-all"
-  //       );
-  //       if (response.data.success) {
-  //         setProducts(response.data.products);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching products:", error);
-  //     }
-  //   };
-
-  //   fetchProducts();
-  // }, []);
+ 
 
   // Set selected product when ID or products change
   useEffect(() => {

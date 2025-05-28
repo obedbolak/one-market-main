@@ -1,7 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
-import { useOthers } from "@/context/OthersContext";
+import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -237,7 +236,7 @@ const CategoryButton = ({
 };
 
 const Services = () => {
-  const { services, refreshAll, fetchServices } = useOthers();
+  const { services } = useProduct();
 
   // Use the first 3 services from context
   const displayedServices = services.slice(0, 3);
@@ -618,35 +617,17 @@ const Category = () => {
   );
 
   const renderContent = () => {
-    const [lostItems, setLostItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const fetchLostItems = async () => {
-      try {
-        const response = await axios.get(
-          "https://onemarketapi.xyz/api/v1/lost/lost-items"
-        );
-        setLostItems(response.data.items.slice(0, 3)); // Assuming the response structure is similar to your example
-        setLoading(false);
-      } catch (err) {
-        setError(error);
-        setLoading(false);
-      }
-    };
+    const { lostItems } = useProduct();
 
-    useEffect(() => {
-      fetchLostItems();
-    }, []); // Empty array to run only once when the component mounts
-
-    if (loading) {
-      return <ActivityIndicator size="large" color="#0000ff" />;
-    }
     if (selectedCategory === "Lost Items") {
+      if (!lostItems || lostItems.length === 0) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+      }
       return (
         <View>
           <FlatList
             ref={flatListRef}
-            data={lostItems}
+            data={lostItems.slice(0, 3)}
             keyExtractor={(item: LostItem) => item._id}
             renderItem={renderLostItem}
             horizontal
@@ -696,8 +677,6 @@ const Category = () => {
           </View>
         </View>
       );
-      // } else if (selectedCategory === "All Sellers") {
-      //   return <TopSellers />;
     } else if (selectedCategory === "All Categories") {
       return <AllCategories />;
     } else if (selectedCategory === "Services") {

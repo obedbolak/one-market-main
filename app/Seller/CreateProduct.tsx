@@ -42,7 +42,7 @@ const CreateProduct = () => {
 
   const [category, setCategory] = useState<string>("");
   // const [categories, setCategories] = useState<Category[]>([]);
-  const {categories} = useProduct();
+  const {categories, createProduct} = useProduct();
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -84,86 +84,73 @@ const isProductFormValid = () => {
     fetchToken();
   }, []);
 
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
+  try {
+    // Validation
     if (images.length === 0) {
-      Alert.alert("Error", "Please select at least one image.");
-      return;
+      throw new Error("Please select at least one image.");
     }
-
     if (!productData.category) {
-      Alert.alert("Error", "Please select a category.");
-      return;
+      throw new Error("Please select a category.");
+    }
+    if (!Uid) {
+      throw new Error("User ID is missing.");
     }
 
-    const formData = new FormData();
+    setloading(true);
 
-    // Append all product data as strings
+    // Prepare FormData
+    const formData = new FormData();
     formData.append("name", productData.name);
     formData.append("description", productData.description);
     formData.append("stock", productData.stock.toString());
     formData.append("price", productData.price.toString());
     formData.append("category", productData.category);
+    formData.append("sellerId", Uid);
 
-    if (Uid) {
-      formData.append("sellerId", Uid);
-    } else {
-      Alert.alert("Error", "User ID is missing.");
-      return;
-    }
-
-    // Append images correctly
+    // Append images properly
     images.forEach((uri, index) => {
       const filename = uri.split("/").pop();
       const match = /\.(\w+)$/.exec(filename || "");
       const type = match ? `image/${match[1]}` : "image/jpeg";
-
+      
       formData.append("files", {
         uri,
-        name: `image_${index}.${type.split("/")[1] || "jpg"}`,
+        name: filename || `image_${index}.jpg`,
         type,
-      } as any);
+      } as any); // Still need 'as any' for React Native FormData
     });
 
-    try {
-      setloading(true);
-      const response = await fetch(
-        "https://onemarketapi.xyz/api/v1/product/create",
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-            // Don't set Content-Type - let React Native set it automatically
-            // with the correct boundary for FormData
-          },
-          body: formData,
-        }
-      );
+    // Call createProduct with just the FormData
+    await createProduct(
+      {
+        name: productData.name,
+        description: productData.description,
+        stock: Number(productData.stock),
+        price: Number(productData.price),
+        category: categories.find((c) => c._id === productData.category) as {
+          _id: string;
+          category: string;
+        },
+        sellerId: Uid,
+        images: images,
+        _id: "",
+        boosted: 0,
+      },
+      formData // Pass FormData as second parameter
+    );
 
-      const responseData = await response.json();
-
-      if (response.ok) {
-        if (responseData.success) {
-          Alert.alert("Success", "Product created successfully!");
-          handleSuccessfulSubmission();
-        } else {
-          Alert.alert(
-            "Error",
-            responseData.message || "Failed to create product."
-          );
-        }
-      } else {
-        console.error("Server response:", responseData);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Full error submitting product:", error);
-      Alert.alert(
-        "Error",
-        "There was an error while submitting the product. Please try again."
-      );
-    }
-  };
+    handleSuccessfulSubmission();
+  } catch (error) {
+    console.error("Product submission error:", error);
+    Alert.alert(
+      "Error",
+      error instanceof Error ? error.message : "Failed to create product"
+    );
+  } finally {
+    setloading(false);
+  }
+};
 
   const pickImages = async () => {
     const permissionResult =
