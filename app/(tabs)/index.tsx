@@ -295,7 +295,15 @@ const handleResultPress = useCallback((item: Product) => {
         return (
           <TouchableOpacity
             style={styles.resultItem}
-            onPress={() => {/* handle service press if needed */}}
+            onPress={() => {/* handle service press if needed */
+               router.push({
+                              pathname: `/Services/[ViewServices]`,
+                              params: {
+                                id: item._id,
+                                category: item.name,
+                              },
+                            })
+            }}
           >
             <Image
               source={{ uri: item.images?.[0]?.url || "https://via.placeholder.com/60" }}
@@ -331,7 +339,9 @@ const handleResultPress = useCallback((item: Product) => {
         return (
           <TouchableOpacity
             style={styles.resultItem}
-            onPress={() => {/* handle job application press if needed */}}
+            onPress={() => {/* handle job application press if needed */
+              router.push(`/Jobs/${item._id}`)
+            }}
           >
             <View style={styles.resultTextContainer}>
               <Text style={styles.resultText} numberOfLines={2}>
@@ -347,7 +357,9 @@ const handleResultPress = useCallback((item: Product) => {
         return (
           <TouchableOpacity
             style={styles.resultItem}
-            onPress={() => {/* handle lost item press if needed */}}
+            onPress={() => {/* handle lost item press if needed */
+              router.push(`/LostItem/${item._id}`)
+            }}
           >
             <Image
               source={{ uri: item.images?.[0]?.url || "https://via.placeholder.com/60" }}

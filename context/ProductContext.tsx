@@ -147,19 +147,7 @@ const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     return Array.isArray(data) ? data : [];
   };
 
-  useEffect(() => {
-    const fetchToken = async () => {
-      const storedToken = await SecureStore.getItem("token");
-      if (storedToken) {
-        setToken(storedToken);
-      } else {
-        Alert.alert("Error", "Authentication token is missing.");
-      }
-    };
-
-    fetchToken();
-  }, []);
-
+  
 
 
 
@@ -304,10 +292,13 @@ const createProduct = useCallback(
     product: Omit<Product, "images"> & { images: string[] },
     formData?: FormData
   ) => {
-    if (!token) {
-      throw new Error("Authentication token is missing.");
-    }
-
+     const storedToken =  SecureStore.getItem("token");
+      if (storedToken) {
+        setToken(storedToken);
+      } else {
+        Alert.alert("Error", "Authentication token is missing.");
+      }
+  
     // Move tempId to the outer scope so it's accessible in both try and catch
     const tempId = `temp-${Date.now()}`;
 
@@ -474,9 +465,97 @@ const createProduct = useCallback(
       });
   }, []);
 
-  const refreshData = async () => {
-    await fetchData();
-  };
+  const refreshData = useCallback(async () => {
+    try {
+      // Define all resources with their endpoints, cache keys, state setters, and array keys
+      const resources = [
+        {
+          url: 'https://onemarketapi.xyz/api/v1/product/get-all',
+          cacheKey: 'products',
+          setState: setProducts,
+          arrayKey: 'products',
+          validate: validateAndNormalizeData<Product>
+        },
+        {
+          url: 'https://onemarketapi.xyz/api/v1/cat/get-all',
+          cacheKey: 'categories',
+          setState: setCategories,
+          arrayKey: 'categories',
+          validate: validateAndNormalizeData<Category>
+        },
+        {
+          url: 'https://onemarketapi.xyz/api/v1/orders/all-orders',
+          cacheKey: 'orders',
+          setState: setOrders,
+          arrayKey: undefined,
+          validate: validateAndNormalizeData<Order>
+        },
+        {
+          url: 'https://onemarketapi.xyz/api/v1/service/services',
+          cacheKey: 'services',
+          setState: setServices,
+          arrayKey: 'services',
+          validate: validateAndNormalizeData<Service>
+        },
+        {
+          url: 'https://onemarketapi.xyz/api/v1/lost/lost-items',
+          cacheKey: 'lostItems',
+          setState: setLostItems,
+          arrayKey: 'items',
+          validate: validateAndNormalizeData<LostItem>
+        },
+        {
+          url: 'https://onemarketapi.xyz/api/v1/job/all-jobs',
+          cacheKey: 'jobs',
+          setState: setJobs,
+          arrayKey: 'jobCreations',
+          validate: validateAndNormalizeData<Job>
+        },
+        {
+          url: 'https://onemarketapi.xyz/api/v1/job/all',
+          cacheKey: 'jobApps',
+          setState: setJobApps,
+          arrayKey: 'jobApplications',
+          validate: validateAndNormalizeData<JobApplication>
+        }
+      ];
+
+      for (const resource of resources) {
+        try {
+          const res = await fetch(resource.url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const latest = resource.validate(data, resource.arrayKey);
+
+          // Get cached data
+          const cachedStr = await AsyncStorage.getItem(resource.cacheKey);
+          let cached: any[] = [];
+          if (cachedStr) {
+            try {
+              cached = JSON.parse(cachedStr);
+            } catch {}
+          }
+
+          // If lengths are the same, do nothing
+          if (latest.length === cached.length) continue;
+
+          // If there are new items, find and add only the new ones
+          const cachedIds = new Set(cached.map((item: any) => item._id));
+          const newItems = latest.filter((item: any) => !cachedIds.has(item._id));
+          if (newItems.length > 0) {
+            const updated = [...cached, ...newItems];
+            resource.setState(updated);
+            await AsyncStorage.setItem(resource.cacheKey, JSON.stringify(updated));
+          }
+        } catch (err) {
+          console.error(`Refresh error for ${resource.cacheKey}:`, err);
+        }
+      }
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('General refresh error:', err);
+    }
+  }, [setProducts, setCategories, setOrders, setServices, setLostItems, setJobs, setJobApps, validateAndNormalizeData]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;

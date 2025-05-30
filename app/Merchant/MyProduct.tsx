@@ -272,7 +272,7 @@ const MyProduct: React.FC<MyProductProps> = ({ onProductCountChange }) => {
               color: '#111827'
             }}
           >
-            ${item.price.toFixed(2)}
+            {item.price.toFixed(2)} XAF
           </Text>
         </View>
 

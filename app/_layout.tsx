@@ -9,6 +9,8 @@ import "react-native-reanimated";
 import { Provider } from "react-redux"; // Import the Provider from react-redux
 import store from "../store";
 
+
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -26,6 +28,8 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
+
+
 
   return (
   <ProductProvider>

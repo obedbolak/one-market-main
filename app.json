@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.Unicom.onemarket",
+      "bundleIdentifier": "com.Unicome.onemarket",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -20,7 +20,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.Unicom.onemarket"
+      "package": "com.Unicome.onemarket"
     },
     "web": {
       "bundler": "metro",
@@ -46,7 +46,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "0c4314f4-7eb8-49fe-a30b-ef903939ec85"
+        "projectId": "a0324d15-f5bb-473e-a73d-17cc6e36dddc"
       },
       "router": {
         "origin": false

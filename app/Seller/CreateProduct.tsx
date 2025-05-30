@@ -128,10 +128,7 @@ const isProductFormValid = () => {
         description: productData.description,
         stock: Number(productData.stock),
         price: Number(productData.price),
-        category: categories.find((c) => c._id === productData.category) as {
-          _id: string;
-          category: string;
-        },
+        category: categories.find((c) => c._id === productData.category) as { _id: string; category: string },
         sellerId: Uid,
         images: images,
         _id: "",

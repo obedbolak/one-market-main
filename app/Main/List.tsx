@@ -253,7 +253,15 @@ const Services = () => {
         showsHorizontalScrollIndicator={false}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => router.push(`/Services/${item._id}`)}
+            onPress={() => router.push({
+                            pathname: `/Services/[ViewServices]`,
+                            params: {
+                              id: item._id,
+                              category: item.name,
+                            },
+                          })
+              
+        }
           >
             <View style={{ marginRight: 16 }}>
               <RNImage
@@ -573,32 +581,40 @@ const Category = () => {
     router.push(`/LostItem/${item._id}`);
   };
 
+  const MAX_DISPLAYED = 2;
+
   const renderLostItem = ({ item }: { item: LostItem }) => (
     <TouchableOpacity
-      style={{ marginTop: 12 }}
+      style={{ marginTop: 12, marginRight: 12 }}
       onPress={() => handleLostItems(item)}
     >
       <View
         style={{
           borderBottomWidth: 2,
           borderBottomColor: "#ffffff",
-          width: 250,
-
+          
           alignItems: "center",
+          backgroundColor: "transparent",
+         
+          borderRadius: 10,
+          padding: 2,
+          
         }}
       >
         <RNImage
           source={{ uri: item.images[0]?.url }}
-          style={{ width: "60%", height: 120, borderRadius: 10 }}
+          style={{ width: 120, height: 120, borderRadius: 10 }}
           resizeMode="cover"
         />
         <Text
           style={{
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: "bold",
             marginTop: 8,
-            maxWidth: "60%",
+            maxWidth: 120,
+            textAlign: "center",
           }}
+          numberOfLines={1}
         >
           {item.itemName}
         </Text>
@@ -606,13 +622,43 @@ const Category = () => {
           style={{
             color: "#A0A0A0",
             marginTop: 4,
-            maxWidth: "80%",
+            maxWidth: 140,
             fontWeight: "bold",
+            textAlign: "center",
           }}
+          numberOfLines={2}
         >
           {item.description}
         </Text>
       </View>
+    </TouchableOpacity>
+  );
+
+  const renderMoreButton = () => (
+    <TouchableOpacity
+      style={{
+        marginTop: 12,
+        marginRight: 12,
+        paddingHorizontal: 16,
+        
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "transparent",
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#00bcd4",
+        
+      }}
+      onPress={() =>
+        router.push({
+          pathname: "/LostItem/LostItem",
+          params: { mode: "searchItem" },
+        })
+      }
+    >
+      <Text style={{ fontSize: 18, color: "#00bcd4", fontWeight: "bold" }}>
+        More Items...
+      </Text>
     </TouchableOpacity>
   );
 
@@ -627,13 +673,19 @@ const Category = () => {
         <View>
           <FlatList
             ref={flatListRef}
-            data={lostItems.slice(0, 3)}
-            keyExtractor={(item: LostItem) => item._id}
-            renderItem={renderLostItem}
+            data={[
+              ...lostItems.slice(0, MAX_DISPLAYED),
+              { _id: "more-button" } as any, // Add a dummy item for the More button
+            ]}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) =>
+              item._id === "more-button"
+                ? renderMoreButton()
+                : renderLostItem({ item })
+            }
             horizontal
             showsHorizontalScrollIndicator={false}
-            snapToInterval={250}
-            decelerationRate="fast"
+            contentContainerStyle={{ paddingHorizontal: 8 }}
           />
           <View
             style={{
@@ -641,14 +693,17 @@ const Category = () => {
               width: "100%",
               justifyContent: "flex-end",
               marginTop: 8,
-              gap: 5,
+              gap: 3,
             }}
           >
             <TouchableOpacity
               style={{
-                backgroundColor: "rgba(255, 0, 0, 0.8)",
+                backgroundColor: "orange",
+                width: "30%", 
                 padding: 5,
                 borderRadius: 5,
+                alignItems: "center",
+                marginRight: 5,
               }}
               onPress={() =>
                 router.push({
@@ -661,19 +716,7 @@ const Category = () => {
                 Report Item
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{ backgroundColor: "green", padding: 5, borderRadius: 5 }}
-              onPress={() =>
-                router.push({
-                  pathname: "/LostItem/LostItem",
-                  params: { mode: "searchItem" },
-                })
-              }
-            >
-              <Text style={{ color: "white", fontWeight: "bold" }}>
-                More ...
-              </Text>
-            </TouchableOpacity>
+            
           </View>
         </View>
       );

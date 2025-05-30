@@ -119,9 +119,9 @@ const OrderModal: React.FC<OrderModalProps> = ({
                   )}
 
                   <Paragraph>Quantity: {item.quantity}</Paragraph>
-                  <Paragraph>Price: XAF{item.price.toFixed(2)}</Paragraph>
+                  <Paragraph>Price:{item.price.toFixed(2)}XAF</Paragraph>
                   <Paragraph>
-                    Total: XAF{(item.price * item.quantity).toFixed(2)}
+                    Total: {(item.price * item.quantity).toFixed(2)}XAF
                   </Paragraph>
 
                   {item.status === "processing" && (
@@ -163,11 +163,11 @@ const OrderModal: React.FC<OrderModalProps> = ({
                   </>
                 )}
                 <Paragraph>
-                  Total Amount: ${order.totalAmount.toFixed(2)}
+                  Total Amount: {order.totalAmount.toFixed(2)} XAF
                 </Paragraph>
-                <Paragraph>Tax: ${order.tax.toFixed(2)}</Paragraph>
+                <Paragraph>Tax: {order.tax.toFixed(2)}XAF</Paragraph>
                 <Paragraph>
-                  Shipping: ${order.shippingCharges.toFixed(2)}
+                  Shipping: {order.shippingCharges.toFixed(2)}XAF
                 </Paragraph>
               </Card.Content>
             </Card>
@@ -396,7 +396,7 @@ const VendorDashboard: React.FC = () => {
                   Status: {order.orderStatus.toUpperCase()}
                 </Paragraph>
                 <Paragraph style={styles.orderAmount}>
-                  Amount: ${order.totalAmount.toFixed(2)}
+                  Amount: {order.totalAmount.toFixed(2)}XAF
                 </Paragraph>
               </View>
               <Paragraph style={styles.orderDate}>
