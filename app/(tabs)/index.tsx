@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 
 import {
@@ -87,6 +88,7 @@ export default function HomeScreen() {
   const { userProfile, getUserProfile, tokenAvailable } = useAuth();
   const { products, loading, error, refreshData,services, jobs, jobApps, lostItems } = useProduct();
     const [activeTab, setActiveTab] = useState("products");
+  const { t, changeLanguage, locale } = useLanguage();
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [role, setRole] = useState<string | null>(null);
@@ -95,6 +97,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
 
   const filteredProducts = products.filter(
   (product) =>
@@ -458,7 +461,28 @@ const handleResultPress = useCallback((item: Product) => {
           numColumns={2}
           ListHeaderComponent={
             <>
-              <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+              <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} setSettingsModalVisible={setSettingsModalVisible} settingsModalVisible={settingsModalVisible} />
+              {settingsModalVisible && (
+  <View style={styles.languageDropdown}>
+    <TouchableOpacity
+      style={styles.languageDropdownOption}
+      onPress={() => {
+        changeLanguage(locale === 'en' ? 'fr' : 'en');
+        setSettingsModalVisible(false);
+      }}
+    >
+      <Text style={styles.languageDropdownOptionText}>
+        {locale === 'en' ? t('switch_to_french') : t('switch_to_english')}
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.languageDropdownClose}
+      onPress={() => setSettingsModalVisible(false)}
+    >
+      <Text style={styles.languageDropdownCloseText}>Close</Text>
+    </TouchableOpacity>
+  </View>
+)}
               <Banner />
               <List />
               <View style={styles.titleContainer}>
@@ -545,36 +569,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   // Existing styles...
-  modalBackground: {
+  modalOverlay: {
     flex: 1,
-    justifyContent: "flex-end",
+    position: "absolute",
+    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 1000,
   },
-  modalContainer: {
+  modalContent: {
     backgroundColor: "white",
     padding: 20,
     borderRadius: 10,
-    width: "100%",
+    width: "80%",
     alignItems: "center",
+    elevation: 5,
   },
-  option: {
+  modalOption: {
     padding: 10,
     borderBottomWidth: 1,
     borderColor: "#ddd",
     width: "100%",
   },
-  optionText: {
+  modalOptionText: {
     fontSize: 16,
     color: "#333",
   },
-  closeButton: {
-    marginTop: 20,
+  modalClose: {
+    marginTop: 10,
     padding: 10,
     backgroundColor: "#f1f1f1",
     borderRadius: 5,
   },
-  closeButtonText: {
+  modalCloseText: {
     fontSize: 14,
     color: "#007BFF",
   },
@@ -751,5 +782,32 @@ const styles = StyleSheet.create({
   productTextSkeletonShort: {
     width: "80%",
     height: 12,
+  },
+  languageDropdown: {
+    position: "absolute",
+    top: 60,
+    right: 10,
+    backgroundColor: "white",
+    borderRadius: 8,
+    elevation: 5,
+    zIndex: 1000,
+    width: 150,
+  },
+  languageDropdownOption: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+  },
+  languageDropdownOptionText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  languageDropdownClose: {
+    padding: 10,
+    alignItems: "center",
+  },
+  languageDropdownCloseText: {
+    fontSize: 14,
+    color: "#007BFF",
   },
 });

@@ -2,14 +2,13 @@ import { useProduct } from '@/context/ProductContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 // Types
@@ -23,7 +22,7 @@ interface Category {
   category: string;
 }
 
-interface Product {
+interface CatalogProduct {
   id: string | string[];
   _id: string;
   name: string;
@@ -60,8 +59,8 @@ const Catalog = () => {
     ? fetchProductsByCategory(selectedCategory)
     : products;
 
-  const renderProductItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity style={styles.productCard} activeOpacity={0.8} onPress={() => router.push(`Product/${item._id}`)}>
+  const renderProductItem = ({ item }: { item: CatalogProduct }) => (
+    <TouchableOpacity style={styles.productCard} activeOpacity={0.8} onPress={() => router.push(`/Product/${item._id}`)}>
       {item.images.length > 0 ? (
         <Image
           source={{ uri: item.images[0].url }}
@@ -108,26 +107,9 @@ const Catalog = () => {
     </TouchableOpacity>
   );
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
-        <Text style={styles.loadingText}>Loading products...</Text>
-      </View>
-    );
-  }
+ 
 
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error loading products</Text>
-        <Text style={styles.errorSubText}>{error}</Text>
-        <TouchableOpacity onPress={refreshData} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  
 
   return (
     <View style={styles.container}>
@@ -160,7 +142,7 @@ const Catalog = () => {
         </Text>
 
         <FlatList
-          data={displayedProducts}
+          data={displayedProducts as CatalogProduct[]}
           renderItem={renderProductItem}
           keyExtractor={item => item._id}
           numColumns={2}

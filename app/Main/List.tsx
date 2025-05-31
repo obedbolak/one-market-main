@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -194,6 +195,8 @@ const CategoryButton = ({
   isSelected: boolean;
   onPress: () => void;
 }) => {
+  const { t } = useLanguage(); // <-- Add this line
+
   const bgColor = isSelected ? "#FFFFFF" : category.backgroundColor;
   const textColor = isSelected ? "#A0A0A0" : "#FFFFFF";
 
@@ -204,7 +207,7 @@ const CategoryButton = ({
         backgroundColor: bgColor,
         borderRadius: 10,
         paddingVertical: 8,
-        height: 50, // Fixed height for consistency
+        height: 50,
       }}
     >
       <View
@@ -224,7 +227,7 @@ const CategoryButton = ({
             paddingHorizontal: 4,
           }}
         >
-          {category.text}
+          {t(category.text)}
         </Text>
         <RNImage
           source={category.image}
@@ -241,10 +244,11 @@ const Services = () => {
   // Use the first 3 services from context
   const displayedServices = services.slice(0, 3);
 
+  const { t } = useLanguage();
   return (
     <View style={{ padding: 16 }}>
       <Text style={{ fontSize: 15, fontWeight: "bold", marginBottom: 8 }}>
-        Services
+        {t('Services') }
       </Text>
       <FlatList
         data={displayedServices}
@@ -256,6 +260,7 @@ const Services = () => {
             onPress={() => router.push({
                             pathname: `/Services/[ViewServices]`,
                             params: {
+                              ViewServices: item._id,
                               id: item._id,
                               category: item.name,
                             },
@@ -269,7 +274,7 @@ const Services = () => {
                 style={{ width: 100, height: 100, borderRadius: 50 }}
               />
               <Text style={{ textAlign: "center", marginTop: 8 }}>
-                {item.name}
+                {item.name }
               </Text>
             </View>
           </TouchableOpacity>
@@ -297,7 +302,7 @@ const Services = () => {
             })
           }
         >
-          <Text style={{ color: "white" }}>All Services </Text>
+          <Text style={{ color: "white" }}>{t('All_Services')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{
@@ -314,7 +319,7 @@ const Services = () => {
           }
         >
           <Text style={{ color: "white", alignSelf: "center" }}>
-            Create a Service
+            {t('Create_a_Service')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -566,6 +571,7 @@ const Category = () => {
   const { width } = useWindowDimensions();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const { t } = useLanguage();
 
   const handlePress = (category: string) => {
     setSelectedCategory((prevCategory) =>
@@ -657,7 +663,7 @@ const Category = () => {
       }
     >
       <Text style={{ fontSize: 18, color: "#00bcd4", fontWeight: "bold" }}>
-        More Items...
+        {t('more')}
       </Text>
     </TouchableOpacity>
   );
@@ -699,7 +705,7 @@ const Category = () => {
             <TouchableOpacity
               style={{
                 backgroundColor: "orange",
-                width: "30%", 
+               paddingHorizontal: 10,
                 padding: 5,
                 borderRadius: 5,
                 alignItems: "center",
@@ -713,7 +719,7 @@ const Category = () => {
               }
             >
               <Text style={{ color: "white", fontWeight: "bold" }}>
-                Report Item
+                {t('Report_Lost_Item')}
               </Text>
             </TouchableOpacity>
             
@@ -743,7 +749,7 @@ const Category = () => {
           marginLeft: 8,
         }}
       >
-        Business Section
+        {t('business_section')}
       </Text>
 
       <View
@@ -817,7 +823,7 @@ const Category = () => {
               marginTop: 8,
             }}
           >
-            Pay Bus Ticket
+            {t('pay_bus_ticket')}
           </Text>
         </TouchableOpacity>
 
@@ -855,7 +861,7 @@ const Category = () => {
               marginTop: 8,
             }}
           >
-            Pharmacies
+            {t('pharmacies')}
           </Text>
         </TouchableOpacity>
 
@@ -893,7 +899,7 @@ const Category = () => {
               marginTop: 8,
             }}
           >
-            House for Rent
+            {t('house_for_rent')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -912,7 +918,7 @@ const Category = () => {
           elevation: 0.2,
         }}
       >
-        Sponsored
+        {t('sponsored')}
       </Text>
 
       <Boost />

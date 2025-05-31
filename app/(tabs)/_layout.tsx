@@ -5,11 +5,13 @@ import { Platform } from "react-native";
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function TabLayout() {
   // This is a workaround to show the settings tab on iOS.
   const { userProfile } = useAuth();
   // userProfile role is admin setShowSettingsTab to true
+  const { t } = useLanguage();
 
   const [showSettingsTab, setShowSettingsTab] = useState(false); // Initialize with a default value
   const [showAdministratorsTab, setShowAdministratorsTab] = useState(false); // Initialize with a default value
@@ -37,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("home"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="house.fill" color={color} />
           ),
@@ -46,7 +48,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="catalog"
         options={{
-          title: "Catalog",
+          title: t("catalog"),
           tabBarIcon: ({ color }) => (
             <IconSymbol
               size={28}
@@ -61,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("settings"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="gearshape.fill" color={color} />
           ),
@@ -71,7 +73,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Account",
+          title: t("account"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="person.fill" color={color} />
           ),
@@ -80,7 +82,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="admin"
         options={{
-          title: "AdminPortal",
+          title: t("admin"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="gearshape.fill" color={color} />
           ),

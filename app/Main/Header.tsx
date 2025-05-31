@@ -1,9 +1,11 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
+import moment from "moment";
 import React, {
   useCallback,
   useEffect,
@@ -104,8 +106,10 @@ interface GroupedMessages {
 interface HeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  setSettingsModalVisible?: React.Dispatch<React.SetStateAction<boolean>>;
+  settingsModalVisible?: boolean;
 }
-const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
+const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSettingsModalVisible, settingsModalVisible }) => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isModalNotificationVisible, setIsModalNotificationVisible] =
     useState<boolean>(false);
@@ -123,6 +127,8 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
 
   const lastFetchedRef = React.useRef<number>(0);
 
+  const { t, changeLanguage } = useLanguage();
+
   const ws = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messagews, setMessagews] = useState<string>("");
@@ -131,7 +137,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
     { content: string; timestamp: string; userId: string }[]
   >([]);
   const [messagesws, setMessagesws] = useState<
-    { content: string; userId: string }[]
+    { content: string; userId: string; roomId: string }[]
   >([]);
 
   const [rooms, setRooms] = useState<
@@ -199,7 +205,16 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
           setIsLoadingMessages(true);
         } else if (data.type === "error") {
           alert(data.message);
-        }
+        } else  if (data.type === "room_deleted") {
+    if (data.success) {
+      // Confirmation from server - no need to do anything if optimistic update worked
+      console.log("Room deleted successfully on server");
+    } else {
+      // Revert optimistic update if server deletion failed
+      setRooms(prevRooms => [...prevRooms, data.room]);
+      alert(`Failed to delete room: ${data.message}`);
+    }
+  }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -272,47 +287,70 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
     }
   };
 
+  const [isSending, setIsSending] = useState(false);
+
   const sendMessagews = async (roomId: string, userId: string) => {
     if (!messagews.trim()) return;
+   
+    try {
+      if (!isConnected || !selectedRoom || selectedRoom !== roomId) {
+        await joinRoom(roomId, userId);
+        setSelectedRoom(roomId);
+      }
 
-    if (!isConnected || !selectedRoom || selectedRoom !== roomId) {
-      await joinRoom(roomId, userId);
-      setSelectedRoom(roomId);
-    }
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        const newMessage = {
+          content: messagews,
+          userId,
+          roomId,
+          timestamp: new Date().toISOString(),
+        };
 
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      const newMessage = {
-        content: messagews,
-        userId,
-        roomId,
-        timestamp: new Date().toISOString(),
-      };
+        ws.current.send(
+          JSON.stringify({
+            type: "chat",
+            ...newMessage,
+          })
+        );
 
-      ws.current.send(
-        JSON.stringify({
-          type: "chat",
-          ...newMessage,
-        })
-      );
-
-      setFormattedMessages((prev) => [
-        ...prev,
-        {
-          content: newMessage.content,
-          timestamp: new Date(newMessage.timestamp).toLocaleTimeString(),
-          userId: newMessage.userId,
-        },
-      ]);
-      setMessagews("");
+        setFormattedMessages((prev) => [
+          ...prev,
+          {
+            content: newMessage.content,
+            timestamp: new Date(newMessage.timestamp).toLocaleTimeString(),
+            userId: newMessage.userId,
+          },
+        ]);
+        setMessagews("");
+      }
+    } finally {
+      
     }
   };
+
+ const deleteRoom = (roomId: string) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(
+        JSON.stringify({
+          type: "delete_room",
+          roomId,
+        })
+      );
+      setRooms((prevRooms) =>
+        prevRooms.filter((room) => room.roomId !== roomId)
+      );
+    } else {
+      console.error("WebSocket is not open. Cannot delete room.");
+    }
+  };
+  
 
   useEffect(() => {
     const fetchInterval = setInterval(() => {
       if (selectedRoom && ws.current?.readyState === WebSocket.OPEN) {
         fetchMessagesws(selectedRoom);
       }
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(fetchInterval);
   }, [selectedRoom]);
@@ -379,20 +417,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
     return { sellerMessages: [], buyerMessages: [] };
   }, [groupedMessages, userProfile?._id]);
 
-  // const handleGroupPress = (
-  //   conversationId: string,
-  //   productId: string,
-  //   buyerId: string
-  // ) => {
-  //   router.push({
-  //     pathname: `/chat/${conversationId}`,
-  //     params: {
-  //       conversationId,
-  //       productId,
-  //       buyerId,
-  //     },
-  //   });
-  // };
+  
 
   const performSearch = useCallback(
     (query: string) => {
@@ -422,15 +447,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
     [performSearch]
   );
 
-  const handleResultPress = useCallback((item: Product) => {
-    router.push(`/Product/${item._id}`);
-    setIsModalVisible(false);
-  }, []);
-
-  const totalNotifications = useMemo(
-    () => (isSeller ? sellerMessages.length : buyerMessages.length),
-    [isSeller, sellerMessages.length, buyerMessages.length]
-  );
+ 
 
   const totalNotificationsws = rooms.length !== 0 ? rooms.length : 0;
 
@@ -458,6 +475,8 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
   const toggleShowOrders = () => {
     setShowOrders(!showOrders);
   };
+
+  // Remove the unused moment function and use native date formatting instead.
 
   return (
     <BlurView intensity={90} tint="light" style={styles.headerContainer}>
@@ -487,7 +506,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
           style={styles.searchBar}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder="Search products..."
+          placeholder={t("Search_for_items")}
           placeholderTextColor="#888"
           onFocus={() => setIsModalVisible(true)}
           clearButtonMode="never" // We'll use our own clear button
@@ -540,84 +559,18 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
   <TouchableOpacity
     style={styles.iconButton}
     onPress={() => {
-      // Open menu/modal here
-      alert("More options coming soon!");
+    if (setSettingsModalVisible) {
+      setSettingsModalVisible(!settingsModalVisible);
+    }
+     
+      
     }}
   >
     <Entypo name="dots-three-vertical" size={22} color="#555" />
   </TouchableOpacity>
       </View>
 
-      {/* Search Modal */}
-      {/* <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setIsModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <BlurView intensity={50} style={styles.modalBlurContainer}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalSearchContainer}>
-                  <Ionicons
-                    name="search"
-                    size={20}
-                    color="#888"
-                    style={styles.modalSearchIcon}
-                  />
-                  <TextInput
-                    style={styles.modalSearchBar}
-                    value={modalSearchQuery}
-                    onChangeText={handleSearchChange}
-                    placeholder="Search for products..."
-                    placeholderTextColor="#888"
-                    autoFocus={true}
-                  />
-                </View>
-                {searchResults.length > 0 ? (
-                  <FlatList
-                    data={searchResults}
-                    keyExtractor={(item) => item._id}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={styles.resultItem}
-                        onPress={() => handleResultPress(item)}
-                      >
-                        <Image
-                          source={{ uri: item.images[0].url }}
-                          style={styles.resultImage}
-                        />
-                        <View style={styles.resultTextContainer}>
-                          <Text style={styles.resultText} numberOfLines={2}>
-                            {item.name}
-                          </Text>
-                          <Text
-                            style={styles.resultDescription}
-                            numberOfLines={2}
-                          >
-                            {item.description}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    )}
-                    ListHeaderComponent={
-                      <Text style={styles.resultHeaderText}>
-                        {searchResults.length} result
-                        {searchResults.length !== 1 ? "s" : ""}
-                      </Text>
-                    }
-                  />
-                ) : (
-                  <View style={styles.noResultsContainer}>
-                    <Text style={styles.noResultsText}>No results found</Text>
-                  </View>
-                )}
-              </View>
-            </BlurView>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal> */}
+     
 
       {/* Notifications/Orders Modal */}
       <Modal
@@ -661,40 +614,76 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
                       <>
                         {!isLoadingMessages ? (
                           <>
-                            {rooms.map((room) => (
-                              <TouchableOpacity
-                                key={room.roomId}
-                                onPress={() => {
-                                  joinRoom(room.roomId, userProfile?._id ?? "");
-                                  setSelectedRoom(room.roomId);
-                                }}
-                              >
-                                <View style={{ flexDirection: "row" }}>
-                                  <Text> Active chat on </Text>
-                                  <Ionicons
-                                    name="chatbubble-ellipses-outline"
-                                    size={20}
-                                    color={"green"}
-                                  />
-                                  <Image
-                                    source={{ uri: room.name }}
-                                    style={{ width: 50, height: 50 }}
-                                  />
-                                </View>
-                              </TouchableOpacity>
-                            ))}
+        {rooms.map((room) => {
+          // Find the last message for this room
+          const lastMessage = messagesws
+            .filter((msg) => msg.roomId === room.roomId)
+            .slice(-1)[0];
+          // check if lastmessage senderId is equal to userProfileId
+          
+
+        
+          return (
+            <TouchableOpacity
+              key={room.roomId}
+              onPress={() => {
+                joinRoom(room.roomId, userProfile?._id ?? "");
+                setSelectedRoom(room.roomId);
+              }}
+            >
+              <View style={{ flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 10 }}>
+                <View style={{ flexDirection: "column" }}>
+                  
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}  ><Text>Active chat on</Text>
+                  <TouchableOpacity onPress={() => {
+                    deleteRoom(room.roomId);
+                  }}>
+                    <Ionicons name="trash" size={20} color={"orange"} />
+                  </TouchableOpacity>
+                  </View>
+
+                  {/* Last message and time */}
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Text style={{ color: "gray" }}>
+              {lastMessage
+                ? lastMessage.userId === userProfileId
+                  ? "You: "
+                  : "Client: "
+                : ""}
+              {lastMessage && lastMessage.content
+                ? `${lastMessage.content} `
+                : `${moment(room.createdAt).format("LL")} ${moment(room.createdAt).format("LT")}`}
+            </Text>
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={20}
+                      color={"green"}
+                    />
+                    
+                  </View>
+                </View>
+                <Image
+                  source={{ uri: room.name }}
+                  style={{ width: 50, height: 50, borderRadius: 8, marginLeft: 10 }}
+                  resizeMode="cover"
+                />
+
+              </View>
+            </TouchableOpacity>
+          );
+        })}
                           </>
                         ) : (
                           <KeyboardAvoidingView
                             style={styles.chatContainer}
-                            behavior={
-                              Platform.OS === "ios" ? "padding" : undefined
-                            }
+                            behavior={Platform.OS === "ios" ? "padding" : "height"}
+                            keyboardVerticalOffset={60} // Adjust this value as needed
                           >
                             <ScrollView
                               ref={scrollViewRef}
                               contentContainerStyle={styles.chatScrollContainer}
                               showsVerticalScrollIndicator={true}
+                              keyboardShouldPersistTaps="handled"
                             >
                               {formattedMessages.map((message, index) => (
                                 <View
@@ -729,7 +718,6 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
                                 </View>
                               ))}
                             </ScrollView>
-
                             <View style={styles.messageInputContainer}>
                               <TextInput
                                 value={messagews}
@@ -746,6 +734,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
                                     userProfile?._id ?? ""
                                   );
                                 }}
+                                disabled={!messagews.trim() }
                               >
                                 <Ionicons name="send" size={20} color="#FFF" />
                               </TouchableOpacity>

@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import { ProductProvider } from "@/context/ProductContext";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -33,7 +34,7 @@ export default function RootLayout() {
 
   return (
   <ProductProvider>
-    
+    <LanguageProvider>
     <AuthProvider>
    <Provider store={store}>
         <Stack>
@@ -100,7 +101,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
       </Provider>
     </AuthProvider>  
-        
+     </LanguageProvider> 
     </ProductProvider>
    
 
