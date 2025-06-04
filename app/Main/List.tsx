@@ -129,13 +129,13 @@ const allCategories = [
       "https://cdn.pixabay.com/photo/2019/12/27/01/49/samsung-4721550_960_720.jpg",
   },
   {
-    text: "Jewelery",
+    text: "Jewelry",
     image:
       "https://cdn.pixabay.com/photo/2016/02/02/15/54/jewellery-1175532_960_720.jpg",
   },
   {
     id: 3,
-    text: "Home",
+    text: "Home Appliances",
     image:
       "https://www.pngitem.com/pimgs/m/61-612748_home-appliances-background-home-appliances-images-png-transparent.png",
   },
@@ -538,6 +538,7 @@ const TopSellers = () => {
 };
 
 const AllCategories = () => {
+  const {t} = useLanguage();
   const handldeCategories = (item: { text: string }) => {
     router.push(`/Categories/${item.text}`);
   };
@@ -556,7 +557,7 @@ const AllCategories = () => {
                 style={{ width: 50, height: 50, borderRadius: 10 }}
               />
               <Text style={{ textAlign: "center", marginTop: 8 }}>
-                {item.text}
+               {t(item.text)}
               </Text>
             </View>
           </TouchableOpacity>

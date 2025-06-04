@@ -1,3 +1,4 @@
+import { useLanguage } from '@/context/LanguageContext';
 import { useProduct } from '@/context/ProductContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -45,6 +46,7 @@ const Catalog = () => {
     refreshData,
     fetchProductsByCategory,
   } = useProduct();
+  const { t, locale } = useLanguage();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -102,7 +104,7 @@ const Catalog = () => {
           styles.categoryText,
           selectedCategory === item._id && styles.selectedCategoryText,
         ]}>
-        {item.category}
+        {t(item.category.trim())}
       </Text>
     </TouchableOpacity>
   );
@@ -114,16 +116,16 @@ const Catalog = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Product Catalog</Text>
+        <Text style={styles.title}>{t('Product Catalog')}</Text>
         {lastUpdated && (
           <Text style={styles.lastUpdated}>
-            Last updated: {lastUpdated.toLocaleString()}
+            {t('Last Updated')}: {lastUpdated.toLocaleString()}
           </Text>
         )}
       </View>
 
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Categories</Text>
+        <Text style={styles.sectionTitle}>{t('Categories')}</Text>
         <FlatList
           horizontal
           data={categories}
@@ -137,8 +139,8 @@ const Catalog = () => {
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>
           {selectedCategory
-            ? `${categories.find(c => c._id === selectedCategory)?.category} Products`
-            : 'All Products'}
+            ? `${locale === 'fr' ? 'Produits' : '' } ${t(categories.find(c => c._id === selectedCategory)?.category.trim() || "")}  ${locale === "en" ? "Products" :   ""}`
+            : t('All Products')}
         </Text>
 
         <FlatList

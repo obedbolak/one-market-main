@@ -60,26 +60,30 @@ interface TabBarProps {
   counts: { [key: string]: number };
 }
 
-const TabBar: React.FC<TabBarProps> = ({ activeTab, setActiveTab, counts }) => (
-  <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
-    {TABS.map((tab) => (
-      <TouchableOpacity
-        key={tab.key}
-        onPress={() => setActiveTab(tab.key)}
-        style={{
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-          borderBottomWidth: activeTab === tab.key ? 2 : 0,
-          borderBottomColor: "#007BFF",
-        }}
-      >
-        <Text style={{ fontWeight: activeTab === tab.key ? "bold" : "normal" }}>
-          {tab.label} ({counts[tab.key]})
-        </Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+const TabBar: React.FC<TabBarProps> = ({ activeTab, setActiveTab, counts }) => {
+  const { t } = useLanguage();
+
+  return (
+    <View style={{ flexDirection: "row", justifyContent: "space-around",  marginVertical: 10, flexWrap: "wrap" }}>
+      {TABS.map((tab) => (
+        <TouchableOpacity
+          key={tab.key}
+          onPress={() => setActiveTab(tab.key)}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderBottomWidth: activeTab === tab.key ? 2 : 0,
+            borderBottomColor: "#007BFF",
+          }}
+        >
+          <Text style={{ fontWeight: activeTab === tab.key ? "bold" : "normal" }}>
+            {t(tab.label)} ({counts[tab.key]})
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
 
 export default function HomeScreen() {
   // const [products, setProducts] = useState<Product[]>([]);
@@ -479,7 +483,7 @@ const handleResultPress = useCallback((item: Product) => {
       style={styles.languageDropdownClose}
       onPress={() => setSettingsModalVisible(false)}
     >
-      <Text style={styles.languageDropdownCloseText}>Close</Text>
+      <Text style={styles.languageDropdownCloseText}>{t('Close')}</Text>
     </TouchableOpacity>
   </View>
 )}
@@ -504,7 +508,7 @@ const handleResultPress = useCallback((item: Product) => {
                   onPress={allProductsShown ? handleShowLess : handleShowMore}
                 >
                   <Text style={styles.showMoreButtonText}>
-                    {allProductsShown ? "Show Less" : "Show More"}
+                    {allProductsShown ? t("Show Less") : t("Show More")}
                   </Text>
                 </TouchableOpacity>
               )}

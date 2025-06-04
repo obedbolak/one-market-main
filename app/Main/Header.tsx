@@ -593,7 +593,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                   }}
                 >
                   <Text style={styles.notificationHeaderText}>
-                    Your Conversations
+                    {t("Your Conversations")}
                     {rooms.length > 0 && (
                       <Text style={{ color: "orange" }}>({rooms.length})</Text>
                     )}
@@ -603,7 +603,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                 <TouchableOpacity onPress={toggleShowOrders}>
                   <Text style={styles.notificationHeaderText}>
                     <Text style={{ color: "orange" }}>({sellerOrders.length})</Text>
-                    Orders
+                    {t("Your Orders")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -754,23 +754,23 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                       renderItem={({ item }) => (
                         <View style={styles.orderContainer}>
                           <Text style={{color: "green", fontSize: 16, marginBottom: 10, fontWeight: "bold"}}>
-                            Your have placed {userOrders.length === 1 ? "an" : `${userOrders.length}`} order{userOrders.length > 1 ? "s" : ""}
+                            {t("Your have placed")} {userOrders.length === 1 ? `${t("an")}` : `${userOrders.length}`} {t("order")}{userOrders.length > 1 ? "s" : ""}
                           </Text>
                           <Text style={styles.orderTitle}>
-                            Order ID: {item._id}
+                            {t("Order ID")} : {item._id}
                           </Text>
                           <View style={{ flexDirection: "row", gap: 2 }}>
-                            <Text style={styles.orderInfo}>Status:</Text>
+                            <Text style={styles.orderInfo}>{t("Status")}:</Text>
                             <Text style={styles.orderStatus}>
-                              {item?.orderStatus.toLocaleUpperCase()}
+                              {t(item?.orderStatus.toLocaleUpperCase())}
                             </Text>
                           </View>
 
                           <Text style={styles.orderInfo}>
-                            Payment Method: {item.paymentMethod}
+                            {t("Payment Method")}: {t(item.paymentMethod)}
                           </Text>
                           <Text style={styles.orderInfo}>
-                            Total Amount: ${item.totalAmount.toFixed(2)}
+                            {t("Total Amount")}: {item.totalAmount.toFixed(2)} XAF
                           </Text>
 
                           {item.orderItems.map((orderItem, index) => (
@@ -796,7 +796,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                               disabled={isLoadingOrders}
                             >
                               <Text style={styles.cancelButtonText}>
-                                Cancel Order
+                                {t("Cancel Order")}
                               </Text>
                             </TouchableOpacity>
                           ) : (
@@ -805,7 +805,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                               disabled={true}
                             >
                               <Text style={styles.cancelButtonText}>
-                                Cancel Order
+                                {t("Cancel Order")}
                               </Text>
                             </TouchableOpacity>
                           )}
@@ -816,7 +816,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                               onPress={() => router.push("/(tabs)/settings")}
                             >
                               <Text style={styles.viewOrdersButtonText}>
-                                View ({orders.length}) Client Orders
+                                {t(`view`)} {orders.length} {t("Clients Orders")}
                               </Text>
                               <Ionicons
                                 name="arrow-forward"
@@ -838,7 +838,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery, setSetting
                   ) : (
                     <View style={styles.noMessagesContainer}>
                       <Text style={styles.noMessagesText}>
-                        You Have Not Placed Any Orders
+                       {t("You Have Placed An Order successfully!")}
                       </Text>
                     </View>
                   )}

@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import React, { useState } from "react";
 import {
   SafeAreaView,
@@ -16,6 +17,7 @@ import CreateProduct from "../Seller/CreateProduct";
 
 const settings = () => {
   const { userProfile } = useAuth();
+  const { t } = useLanguage();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showoptions, setshowoptions] = useState(false);
   const [productCount, setProductCount] = useState<number>(0); // State to store product length
@@ -36,7 +38,7 @@ const settings = () => {
     <SafeAreaView style={styles.container}>
       <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
         <Text style={[styles.title, { color: "#16a34a" }]}>
-          Hi, {capitalizeWords(userProfile?.name)}
+         {t("welcome")}, {capitalizeWords(userProfile?.name)}
         </Text>
       </View>
 
@@ -58,7 +60,7 @@ const settings = () => {
                 selectedOption === "createProduct" && styles.selectedOptionText,
               ]}
             >
-              Create New Product
+              {t("Create New Product")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -74,7 +76,7 @@ const settings = () => {
                 selectedOption === "viewOrders" && styles.selectedOptionText,
               ]}
             >
-              View Orders
+              {t("View Orders")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -93,7 +95,7 @@ const settings = () => {
                   selectedOption === "Products" && styles.selectedOptionText,
                 ]}
               >
-                My Products
+                {t("My Products")}
               </Text>
               <Text
                 style={[
@@ -117,7 +119,7 @@ const settings = () => {
                   styles.selectedOptionText,
               ]}
             >
-              Account Settings
+              {t("Account Settings")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -133,7 +135,7 @@ const settings = () => {
                 selectedOption === "Plans-Upgrade" && styles.selectedOptionText,
               ]}
             >
-              Plans Upgrade
+              {t("Plans & Upgrade")}
             </Text>
           </TouchableOpacity>
         </View>

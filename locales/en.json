@@ -11,6 +11,24 @@
   "logout": "Logout",
   "register": "Register",
   "home": "Home",
+  
+  "Your have placed": "You have placed ",
+  "an": "an",
+  "order": "order",
+  "Order ID": "Order ID",
+  "Status": "Status",
+  "Payment Method": "Payment Method",
+  "Total Amount": "Total Amount",
+  "PROCESSING": "PROCESSING",
+  "COMPLETED": "COMPLETED",
+  "DELIVERED": "DELIVERED",
+  "FAILED": "FAILED",
+  "SHIPPED": "SHIPPED",
+  "Payment_On_Delivery": "PAYMENT ON DELIVERY",
+  "Cancel Order": "Cancel Order",
+  "view": "View",
+  "Clients Orders": "Clients Orders",
+
   "Search_for_items": "Search for items...",
   "cart": "Cart",
   "profile": "Profile",
@@ -28,14 +46,25 @@
   "success_message": "Success!",
   "account": "Account",
   "catalog": "Catalog",
-  
+  "Categories": "Categories",
+  "Sports & Outdoors": "Sports & Outdoors",
+  "Books & Stationery": "Books & Stationery",
+  "Automotive": "Automotive",
+  "Home & Living": "Home & Living",
+  "Fashion": "Fashion",
+
+
   "terms_conditions": "Terms & Conditions",
   "about_us": "About Us",
   "contact_us": "Contact Us",
   "create_seller_account": "Create Seller Account",
   "all_rights_reserved": "All rights reserved",
-  
-  
+  "Your Conversations": "Your Conversations",
+  "Your Orders": "Your Orders",
+  "Show More": "Show More",
+  "Show Less": "Show Less",
+
+
   "current_language": "Current Language",
   "switch_to_english": "Switch to English",
   "switch_to_french": "Passer au français",
@@ -57,7 +86,32 @@
   "sponsored": "Sponsored",
   "sign_in": "Sign In",
   "sell_on": "Sell on (1M)",
-  "more": "More Items..."
+  "more": "More Items...",
+  "All Products": "All Products",
+  "Product Catalog": "Product Catalog",
+  "Clothing": "Clothing",
+  "Electronics": "Electronics",
+  "Home Appliances": "Home Appliances",
+  "Books": "Books",
+  "Jewelry": "Jewelry",
+  "Sport": "Sports",
+  "Health & Beauty": "Health & Beauty",
+  "Automobile": "Automobile",
+  "Real Estate": "Real Estate",
+  "Pet Supplies": "Pet Supplies",
+  "You Have Placed An Order successfully": "You Have Placed An Order successfully",
+  "Close": "Close",
+    "Create New Product": "Create New Products",
+    "View Orders": "View Orders",
+    "My Products": "My Products",
+    "Account Settings": "Account Settings",
+    "Plans & Upgrade": "Plans & Upgrade",
 
+  "Last Updated": "Last updated",
+  "Products": "Products",
+  "jobs": "Jobs",
+  "Job Seekers": "Job Seekers",
+
+  "Arts & Crafts": "Arts & Crafts"
 
 } 
