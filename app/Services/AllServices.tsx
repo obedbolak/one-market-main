@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
@@ -206,6 +207,7 @@ const AllServices: React.FC = () => {
     categoryList ? categoryList : "All"
   );
   const { services } = useProduct();
+  const {t} = useLanguage();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -290,7 +292,7 @@ const AllServices: React.FC = () => {
         <View style={{}}>
           <View>
             <View>
-              <Text style={styles.serviceTitle}>{item.name}</Text>
+              <Text style={styles.serviceTitle}>{t(item.name)} </Text>
             </View>
             <View
               style={{
@@ -330,7 +332,7 @@ const AllServices: React.FC = () => {
               })
             }
           >
-            <Text style={styles.detailsButtonText}>View Details</Text>
+            <Text style={styles.detailsButtonText}>{t("View Details")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -781,8 +783,8 @@ const AllServices: React.FC = () => {
               }}
               placeholder={
                 selectedCategory === "Health"
-                  ? `Search for Drugs, Pharmacies `
-                  : `Search In ${selectedCategory}`
+                  ? `${t("Search for Drugs, Pharmacies")}`
+                  : `${t("Search In")} ${t(selectedCategory)}`
               }
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -828,7 +830,7 @@ const AllServices: React.FC = () => {
               style={{ flexDirection: "row" }}
               onPress={() => setSearchLocation(!searchlocation)}
             >
-              <Text> Select</Text>
+              <Text> {t("Select")}</Text>
               <Ionicons name="location" size={20} color={"orange"} />
               <TextInput
                 value={location || "Location"}
@@ -856,7 +858,7 @@ const AllServices: React.FC = () => {
             >
               <Text style={{ color: "white", fontWeight: "bold" }}>
                 {selectedCategory === "Real Estate"
-                  ? " Properties"
+                  ? ` ${t("Properties")}`
                   : selectedCategory === "Health"
                   ? null
                   : selectedCategory === "Transportation"
@@ -874,7 +876,7 @@ const AllServices: React.FC = () => {
               }}
             >
               <Text style={{ color: "skyblue", fontWeight: "bold" }}>
-                Create Post
+                {t("Create Service")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -983,7 +985,7 @@ const AllServices: React.FC = () => {
                         <View style={styles.ViewlocationContainer}>
                           <View>
                             <Text style={styles.ViewpropertyType}>
-                              {itemToView?.postType.trim()}
+                              {t(itemToView?.postType?.trim() || "")}
                             </Text>
                           </View>
                           <View></View>
@@ -994,13 +996,13 @@ const AllServices: React.FC = () => {
                           </Text>
                         </View>
 
-                        <Text style={styles.sectionTitle}>Description</Text>
+                        <Text style={styles.sectionTitle}>{t("Description")}</Text>
                         <Text style={styles.description}>
                           {itemToView?.description.trim()}
                         </Text>
 
                         <Text style={styles.sectionTitle}>
-                          Contact Information
+                          {t("Contact Information")}
                         </Text>
                         <Text style={styles.contactInfo}>
                           {itemToView?.contactInfo.trim()}
@@ -1059,7 +1061,7 @@ const AllServices: React.FC = () => {
       >
         <View style={styles.container}>
           <View style={styles.formContainer}>
-            <Text style={styles.formLabel}>Select A Service Category</Text>
+            <Text style={styles.formLabel}>{t("Select A Service Category")}</Text>
             {/* <RealEstateSelector
               onSelectionChange={(transaction, property) => {
                 setNewService({
@@ -1097,7 +1099,7 @@ const AllServices: React.FC = () => {
                 setViewCat(false);
               }}
               selectedValue={newService.name}
-              placeholder="Select a category"
+              placeholder={t("Select a category")}
               width={200}
             />
             <View
@@ -1331,7 +1333,7 @@ const AllServices: React.FC = () => {
                         }
                       >
                         <Text style={{ color: "white", fontWeight: "bold" }}>
-                          Rent
+                          {t("Rent")}
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -1352,7 +1354,7 @@ const AllServices: React.FC = () => {
                         }
                       >
                         <Text style={{ color: "white", fontWeight: "bold" }}>
-                          Sale
+                          {t("Sale")}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -1453,10 +1455,10 @@ const AllServices: React.FC = () => {
             </View>
             {newService.name === "Others" && (
               <>
-                <Text style={styles.formLabel}>Name of Service</Text>
+                <Text style={styles.formLabel}>{t("Name of Service")}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Your Category"
+                  placeholder={t("Enter Your Category")}
                   value={newService.name === "Others" ? "" : newService.name}
                   onChangeText={(text: string) =>
                     setNewService({ ...newService, name: text })
@@ -1465,14 +1467,14 @@ const AllServices: React.FC = () => {
               </>
             )}
             <Text style={styles.formLabel}>
-              {newService.postType !== "" ? "Property Title" : "Service Name"}
+              {newService.postType !== "" ? t("Property Title") : t("Service Name")}
             </Text>
             <TextInput
   style={styles.input}
   placeholder={
-    newService.postType 
-      ? "Enter Property Title" 
-      : "Enter service name (e.g., Pharmacy, Car-Repairs)"
+    newService.postType
+      ? t("Enter Property Title")
+      : t("Enter service name")
   }
   value={newService.postType ? newService.postName : newService.location}
   onChangeText={(text) =>
@@ -1482,8 +1484,8 @@ const AllServices: React.FC = () => {
   }
 />
             <View style={{ flexDirection: "row" }}>
-              <View style={{ flex: 1, marginBottom: 10 }}>  
-                <Text style={styles.formLabel}>City</Text>
+              <View style={{ flex: 1, marginBottom: 10 }}>
+                <Text style={styles.formLabel}>{t("City")}</Text>
                 <TouchableOpacity
                   style={{
                     borderWidth: 0.8,
@@ -1501,7 +1503,7 @@ const AllServices: React.FC = () => {
                       justifyContent: "space-between",
                     }}
                   >
-                    <Text>{locationCity ? locationCity : "Select City"}</Text>
+                    <Text>{locationCity ? locationCity : t("Select City")}</Text>
                     <Ionicons
                       name="chevron-forward"
                       size={18}
@@ -1565,15 +1567,15 @@ const AllServices: React.FC = () => {
                 <Text style={styles.formLabel}>
                   {newService.postType === newService.postType
                     ? `${newService.postType} Address`
-                    : "Service Address"}
+                    : `${t("Service Address")}`}
                 </Text>
 
                 <TextInput
                   style={styles.input}
                   placeholder={
                     newService.postType !== ""
-                      ? "Enter Property Address"
-                      : "Enter service (etug-ebe round-about)"
+                      ? t("Enter Property Address")
+                      : t("Enter service (etug-ebe round-about)")
                   }
                   value={newService.contactInfo}
                   onChangeText={(text: string) =>
@@ -1581,26 +1583,26 @@ const AllServices: React.FC = () => {
                   }
                 />
               </View>
-            <Text style={styles.formLabel}> Email or Phone</Text>
+            <Text style={styles.formLabel}> {t("Email or Phone")}</Text>
             <TextInput
               style={styles.input}
               placeholder={
                 newService.postType !== ""
-                  ? "Enter Property Contact e-mails/ phone"
-                  : "Enter service email/phone"
+                  ? t("Enter Property Contact e-mails/ phone")
+                  : t("Enter service email/phone")
               }
               value={newService.email}
               onChangeText={(text: string) =>
                 setNewService({ ...newService, email: text })
               }
             />
-            <Text style={styles.formLabel}>Description</Text>
+            <Text style={styles.formLabel}>{t("Description")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder={
                 newService.postType !== ""
-                  ? "Enter Property description"
-                  : "Enter service description"
+                  ? t("Enter Property description")
+                  : t("Enter service description")
               }
               multiline
               numberOfLines={4}
@@ -1610,7 +1612,7 @@ const AllServices: React.FC = () => {
               }
             />
             <View style={{ marginBottom: 10 }}>
-              <Text>Maximum of 6 images</Text>
+              <Text>{t("Maximum of 6 images")}</Text>
             </View>
             <View style={styles.imageGridContainer}>
               {images.map((uri, index) => (
@@ -1638,7 +1640,7 @@ const AllServices: React.FC = () => {
                     size={32}
                     color="#007bff"
                   />
-                  <Text style={styles.addImageText}>Add Image</Text>
+                  <Text style={styles.addImageText}>{t("Add Image")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1667,7 +1669,7 @@ const AllServices: React.FC = () => {
                           onPress={() => handleCreateService()} // Directly call the service creation function
                         >
                           <Text style={styles.submitButtonText}>
-                            Create Service
+                            {t("Create Service")}
                           </Text>
                         </TouchableOpacity>
                       </>
@@ -1676,7 +1678,7 @@ const AllServices: React.FC = () => {
                 ) : (
                   <>
                     <Text style={{ color: "lightblue", fontWeight: "bold" }}>
-                      Register to continue ..
+                      {t("Register to continue ..")}
                     </Text>
                     <View
                       style={{ flexDirection: "row", gap: 15, marginTop: 5 }}
@@ -1697,7 +1699,7 @@ const AllServices: React.FC = () => {
                         }}
                       >
                         <Text style={{ color: "white", fontWeight: "bold" }}>
-                          Sign Up
+                          {t("Sign Up")}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -1781,7 +1783,7 @@ const AllServices: React.FC = () => {
           >
             <Ionicons name="arrow-back" size={23} color={"black"} />
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>{getPageTitle(mode)}</Text>
+          <Text style={styles.pageTitle}>{t(getPageTitle(mode))}</Text>
           {getContent(mode)}
         </View>
       </View>

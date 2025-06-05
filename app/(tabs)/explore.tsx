@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
@@ -18,7 +19,7 @@ import {
 
 export default function ProfileScreen() {
   const { getUserProfile, signout, tokenAvailable, userProfile } = useAuth();
-
+const { t } = useLanguage();
   // Initialize all state hooks at the top level
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -159,10 +160,10 @@ export default function ProfileScreen() {
         </Text>
         <View style={styles.authButtonsContainer}>
           <TouchableOpacity onPress={handlesignup} style={styles.authButton}>
-            <Text style={styles.authButtonText}>Sign Up</Text>
+            <Text style={styles.authButtonText}>{t("signup")}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handlesignin} style={styles.authButton}>
-            <Text style={styles.authButtonText}>Sign In</Text>
+            <Text style={styles.authButtonText}>{t("signin")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -218,20 +219,20 @@ export default function ProfileScreen() {
 
       {/* Personal Details */}
       <TouchableOpacity onPress={toggleShowPersonal}>
-        <Text style={styles.addImageText}>Personal Details</Text>
+        <Text style={styles.addImageText}>{t("personal")}</Text>
       </TouchableOpacity>
 
       {showPersonal && (
         <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Full Name"
+            placeholder={t("full_name")}
             value={name}
             onChangeText={setName}
           />
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder={t("email")}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -241,38 +242,38 @@ export default function ProfileScreen() {
             <>
               <TextInput
                 style={styles.input}
-                placeholder="Address"
+                placeholder={t("address")}
                 value={address}
                 onChangeText={setAddress}
               />
               <TextInput
                 style={styles.input}
-                placeholder="City"
+                placeholder={t("city")}
                 value={city}
                 onChangeText={setCity}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Country"
+                placeholder={t("country")}
                 value={country}
                 onChangeText={setCountry}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Security Answer"
+                placeholder={t("security_answer")}
                 value={answer}
                 onChangeText={setAnswer}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder={t("password")}
                 value="********"
                 secureTextEntry={true}
                 editable={false}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Phone Number"
+                placeholder={t("phone_number")}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
@@ -281,7 +282,7 @@ export default function ProfileScreen() {
                 style={styles.saveButton}
                 onPress={handleSubmit}
               >
-                <Text style={styles.saveButtonText}>Save Changes</Text>
+                <Text style={styles.saveButtonText}>{t("save_changes")}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -290,7 +291,7 @@ export default function ProfileScreen() {
 
       {/* Orders Section */}
       <TouchableOpacity onPress={toggleShowOrders}>
-        <Text style={styles.addImageText}>Orders</Text>
+        <Text style={styles.addImageText}>{t("orders")}</Text>
       </TouchableOpacity>
 
       {showOrders && (
@@ -322,14 +323,14 @@ export default function ProfileScreen() {
             secureTextEntry={true}
           />
           <TouchableOpacity style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Change Password</Text>
+            <Text style={styles.saveButtonText}>{t("change_password")}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Terms and Conditions Section */}
       <TouchableOpacity onPress={toggleShowTerms}>
-        <Text style={styles.addImageText}>Terms and Conditions</Text>
+        <Text style={styles.addImageText}>{t("terms_and_conditions")}</Text>
       </TouchableOpacity>
       {showTerms && (
         <View style={styles.section}>
@@ -339,7 +340,7 @@ export default function ProfileScreen() {
 
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handlelogout}>
-        <Text style={styles.closeButtonText}>Sign Out</Text>
+        <Text style={styles.closeButtonText}>{t("signout")}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

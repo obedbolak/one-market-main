@@ -274,7 +274,7 @@ const Services = () => {
                 style={{ width: 100, height: 100, borderRadius: 50 }}
               />
               <Text style={{ textAlign: "center", marginTop: 8 }}>
-                {item.name }
+                {t(item.name)  }
               </Text>
             </View>
           </TouchableOpacity>
@@ -328,6 +328,7 @@ const Services = () => {
 };
 
 const Jobs = () => {
+  const { t } = useLanguage();
   const categoryData = [
     {
       id: "1",
@@ -377,7 +378,7 @@ const Jobs = () => {
                 style={{ width: 80, height: 80, borderRadius: 10 }}
               />
               <Text style={{ textAlign: "center", marginTop: 8 }}>
-                {item.title}
+                {t(item.title)}
               </Text>
             </View>
           </TouchableOpacity>

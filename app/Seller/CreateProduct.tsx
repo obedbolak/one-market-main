@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -27,7 +28,7 @@ interface Category {
 
 const CreateProduct = () => {
   const { userProfile } = useAuth();
-
+const { t } = useLanguage();
   const Uid = userProfile?._id;
   const initialProductData = {
     name: "",
@@ -224,8 +225,10 @@ const isProductFormValid = () => {
         onPress={() => setShowCategoryDropdown(true)}
       >
         <Text style={{ color: productData.category ? "#000" : "#888" }}>
-          {categories.find((c) => c._id === productData.category)?.category ||
-            "Select Category"}
+          {t(
+    categories.find((c) => c._id === productData.category)?.category?.trim() ||
+      `${t("select_category")}`
+  )}
         </Text>
         <MaterialIcons name="arrow-drop-down" size={24} color="#888" />
       </TouchableOpacity>
@@ -251,7 +254,7 @@ const isProductFormValid = () => {
                     setShowCategoryDropdown(false);
                   }}
                 >
-                  <Text>{cat.category}</Text>
+                  <Text>{t(cat.category.trim())}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -273,7 +276,7 @@ const isProductFormValid = () => {
             {renderInputField("Stock", "stock", "numeric")}
             {/* Numeric keyboard */}
             <Text style={{ marginBottom: 8, fontSize: 16, color: "lightgray" }}>
-              Upload Images (6 max)
+             {t("max_6_images")}
             </Text>
             <View
               style={{
@@ -356,7 +359,7 @@ const isProductFormValid = () => {
                       textAlign: "center",
                     }}
                   >
-                    Add Image
+                    {t("add_images")}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -398,7 +401,7 @@ const isProductFormValid = () => {
                     fontSize: 16,
                   }}
                 >
-                  Creating Product...
+                  {t("creating_product")}
                 </Text>
 </View>
               ) : (
@@ -409,7 +412,7 @@ const isProductFormValid = () => {
                   fontSize: 16,
                 }}
               >
-                Create Product
+                {t("create_product")}
               </Text>)}
             </TouchableOpacity>
           </>
@@ -462,7 +465,7 @@ const isProductFormValid = () => {
           fontWeight: "bold",
         }}
       >
-        {selectedProduct ? "" : "Select the type of Product"}
+        {selectedProduct ? "" : `${t("select_product_type")}`}
       </Text>
 
       {!selectedProduct ? (
@@ -483,7 +486,7 @@ const isProductFormValid = () => {
       ) : (
         <View style={{ width: "100%" }}>
           <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 20 }}>
-            Enter Details for {selectedProduct}
+            {`${t("enter_details_for")} ${selectedProduct}`}
           </Text>
           {renderInputFields()}
           <TouchableOpacity
