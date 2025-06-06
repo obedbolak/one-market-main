@@ -466,7 +466,10 @@ const ViewServices = () => {
               style={styles.input}
               placeholder="Full Name"
               value={formData.name}
-              onChangeText={(text) => handleInputChange("name", text)}
+              onChangeText={(text) => {
+                handleInputChange("name", text);
+                handleInputChange("fullName", text); // <-- Add this line
+              }}
             />
             <TextInput
               style={styles.input}
@@ -523,6 +526,15 @@ const ViewServices = () => {
                 placeholder="select destination"
               />
             </View>
+            <View style={styles.infoRow}>
+              <CityField
+                label="Select City"
+                value={formData.selectedCity}
+                onChangeText={(text) => handleInputChange("selectedCity", text)}
+                placeholder="select city"
+                settoggleBranch={()=> {}}
+              />
+            </View>
             <DateTimeField
               label="Delivery Date & Time"
               value={deliveryDate}
@@ -548,6 +560,7 @@ const ViewServices = () => {
               <SeatSelector
                 onSeatsSelected={(selectedSeats) => {
                   handleInputChange("selectedSeats", selectedSeats);
+                  handleInputChange("totalSeats", selectedSeats.length); // <-- Add this line
                 }}
                 initialSelected={formData.selectedSeats}
                 rows={10}
@@ -563,11 +576,10 @@ const ViewServices = () => {
             <TouchableOpacity
               style={[
                 styles.paymentOption,
-                formData.paymentMethod === "Momo" &&
-                  styles.paymentOptionSelected,
+                formData.paymentMethod === "Momo" && styles.paymentOptionSelected,
               ]}
               onPress={() => {
-                handleInputChange("paymentMethod", "mobile_money");
+                handleInputChange("paymentMethod", "Momo");
                 setSelectedPayment("Momo");
               }}
             >
@@ -576,11 +588,10 @@ const ViewServices = () => {
             <TouchableOpacity
               style={[
                 styles.paymentOption,
-                formData.paymentMethod === "Credit Card" &&
-                  styles.paymentOptionSelected,
+                formData.paymentMethod === "Credit Card" && styles.paymentOptionSelected,
               ]}
               onPress={() => {
-                handleInputChange("paymentMethod", "credit_card");
+                handleInputChange("paymentMethod", "Credit Card");
                 setSelectedPayment("Credit Card");
               }}
             >
@@ -589,11 +600,10 @@ const ViewServices = () => {
             <TouchableOpacity
               style={[
                 styles.paymentOption,
-                formData.paymentMethod === "Pay on Delivery" &&
-                  styles.paymentOptionSelected,
+                formData.paymentMethod === "Pay on Delivery" && styles.paymentOptionSelected,
               ]}
               onPress={() => {
-                handleInputChange("paymentMethod", "on_delivery");
+                handleInputChange("paymentMethod", "Pay on Delivery");
                 setSelectedPayment("Pay on Delivery");
               }}
             >
