@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 import { addToCart } from "@/store/cartSlice";
 import { Ionicons } from "@expo/vector-icons";
@@ -48,6 +49,7 @@ interface ChatMessage {
 const ProductDetails = () => {
   const { id, model } = useLocalSearchParams();
   const { userProfile } = useAuth();
+  const {t} = useLanguage();
   const dispatch = useDispatch();
   const cartItems = useSelector((state: any) => state.cart.items);
 
@@ -384,7 +386,7 @@ const ProductDetails = () => {
 
           <View style={styles.priceRow}>
             <View>
-              <Text style={styles.priceLabel}>Price</Text>
+              <Text style={styles.priceLabel}>{t("Price")}</Text>
               <Text style={styles.price}>
                 {selectedProduct.price * quantity} XAF
               </Text>
@@ -408,14 +410,14 @@ const ProductDetails = () => {
           </View>
 
           <View style={styles.stockRow}>
-            <Text>In stock: <Text style={styles.stock}>{selectedProduct.stock}</Text></Text>
-            <Text>Category: <Text style={styles.category}>{selectedProduct.category.category}</Text></Text>
+            <Text>{t("In stock")}: <Text style={styles.stock}>{selectedProduct.stock}</Text></Text>
+            <Text>{t("Category")}: <Text style={styles.category}>{t(selectedProduct.category.category.trim())}</Text></Text>
           </View>
 
-          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.sectionTitle}>{t("Description")}</Text>
           <Text style={styles.description}>{selectedProduct.description}</Text>
 
-          <Text style={styles.sectionTitle}>Related Products</Text>
+          <Text style={styles.sectionTitle}>{t("Related Products")}</Text>
           <ScrollView horizontal>
             {relatedProducts.map(product => (
               <TouchableOpacity 
@@ -440,13 +442,13 @@ const ProductDetails = () => {
           onPress={addToCartHandler}
           style={styles.cartButton}
         >
-          <Text>Add To Cart</Text>
+          <Text>{t("Add To Cart")}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={buyNowHandler}
           style={styles.buyButton}
         >
-          <Text>Buy Now</Text>
+          <Text>{t("Buy Now")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -472,7 +474,7 @@ const ProductDetails = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chat with Seller</Text>
+              <Text style={styles.modalTitle}>"{t("Chat with Seller")}"</Text>
               <TouchableOpacity onPress={() => setChatModal(false)}>
                 <Ionicons name="close" size={24} />
               </TouchableOpacity>
@@ -537,7 +539,7 @@ const ProductDetails = () => {
               <TextInput
                 value={messageInput}
                 onChangeText={setMessageInput}
-                placeholder="Type your message..."
+                placeholder={t("Type your message")}
                 style={styles.messageInput}
               />
               <TouchableOpacity 

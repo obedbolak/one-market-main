@@ -186,27 +186,32 @@ const isProductFormValid = () => {
   };
 
   const renderInputField = (
+    label: string,
     placeholder: string,
     field: keyof typeof productData,
-    keyboardType:
-      | "default"
-      | "numeric"
-      | "email-address"
-      | "phone-pad" = "default"
+    keyboardType: "default" | "numeric" | "email-address" | "phone-pad" = "default",
+    hintText?: string
   ) => (
-    <TextInput
-      placeholder={placeholder}
-      style={{
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
-      }}
-      value={productData[field]}
-      onChangeText={(text) => setProductData({ ...productData, [field]: text })}
-      keyboardType={keyboardType}
-    />
+    <View style={{ marginBottom: 16 }}>
+      <Text style={{ fontWeight: "bold", marginBottom: 4, fontSize: 15 }}>{label}</Text>
+      <TextInput
+        placeholder={placeholder}
+        style={{
+          borderWidth: 1,
+          borderColor: "#ddd",
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 4,
+        }}
+        value={productData[field]}
+        onChangeText={(text) => setProductData({ ...productData, [field]: text })}
+        keyboardType={keyboardType}
+        autoCapitalize="none"
+      />
+      {hintText && (
+        <Text style={{ color: "#888", fontSize: 12, marginTop: 2 }}>{hintText}</Text>
+      )}
+    </View>
   );
 
   // Update the dropdown renderer
@@ -268,12 +273,12 @@ const isProductFormValid = () => {
       case "Item":
         return (
           <>
-            {renderInputField("Name", "name")}
-            {renderInputField("Price", "price", "numeric")}
+            {renderInputField(t("Product Name"), t("Enter Product Name"), "name", "default", t("This will be visible to buyers"))}
+            {renderInputField(t("Product Price"), t("Enter Product Price"), "price", "numeric")}
             {/* Numeric keyboard */}
-            {renderInputField("Description", "description")}
+            {renderInputField(t("Product Description"), t("Enter Product Description"), "description")}
             {renderCategoryDropdown()}
-            {renderInputField("Stock", "stock", "numeric")}
+            {renderInputField(t("Product Stock"), t("Enter Product Stock"), "stock", "numeric")}
             {/* Numeric keyboard */}
             <Text style={{ marginBottom: 8, fontSize: 16, color: "lightgray" }}>
              {t("max_6_images")}

@@ -36,7 +36,7 @@ const ResponsiveComponent = ({
       {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.name}>
-          {selectedItem?.firstName} {selectedItem?.middleName}{" "}
+          {selectedItem?.firstName} {selectedItem?.middleName}
           {selectedItem?.lastName}
         </Text>
         <Text style={styles.subtitle}>{selectedItem?.jobType}</Text>

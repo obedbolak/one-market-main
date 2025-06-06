@@ -414,22 +414,53 @@ const handleResultPress = useCallback((item: Product) => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       {!tokenAvailable && (
-        <View style={styles.authButtonsContainer}>
-          <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
-            <TouchableOpacity
-              onPress={handlesignup}
-              style={styles.authButton}
-            >
-              <Text style={styles.authButtonText}>Sign Up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handlesignin}
-              style={styles.authButton}
-            >
-              <Text style={styles.authButtonText}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+       <View style={styles.authButtonsContainer}>
+  <View style={{ flexDirection: "row", gap: 4, marginTop: 4 }}>
+    <TouchableOpacity
+      onPress={handlesignup}
+      style={[
+        styles.authButton,
+        {
+          backgroundColor: "#fff",
+          borderColor: "#1d4ed8",
+          borderWidth: 1.5,
+          marginRight: 6,
+          shadowColor: "#1d4ed8",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 2,
+        },
+      ]}
+      activeOpacity={0.85}
+    >
+      <Text style={[styles.authButtonText, { color: "#1d4ed8", fontWeight: "bold", letterSpacing: 1 }]}>
+        {t("Sign Up")}
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      onPress={handlesignin}
+      style={[
+        styles.authButton,
+        {
+          backgroundColor: "#1d4ed8",
+          borderColor: "#1d4ed8",
+          borderWidth: 1.5,
+          shadowColor: "#1d4ed8",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 2,
+        },
+      ]}
+      activeOpacity={0.85}
+    >
+      <Text style={[styles.authButtonText, { color: "#fff", fontWeight: "bold", letterSpacing: 1 }]}>
+        {t("Sign In")}
+      </Text>
+    </TouchableOpacity>
+  </View>
+</View>
       )}
 
       {debouncedSearchQuery  ? (
@@ -674,7 +705,7 @@ const styles = StyleSheet.create({
   top: height * 0.91,
     right: 10,
     zIndex: 100,
-    width: 160,
+    width: "90%",
     backgroundColor: "rgba(0,0,0, .1)",
     height: 60,
     borderRadius: 20,

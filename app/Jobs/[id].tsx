@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useProduct } from "@/context/ProductContext";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
@@ -72,6 +73,7 @@ const JobDetails = () => {
   const { id, title } = useLocalSearchParams<any>();
   const { userProfile } = useAuth();
   const { jobApps, jobs } = useProduct();
+  const { t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -294,19 +296,19 @@ setLoading(true)
               <View style={styles.nameRow}>
                 <TextInput
                   style={[styles.input, styles.nameInput]}
-                  placeholder="First Name"
+                  placeholder={t("First Name")}
                   value={firstName}
                   onChangeText={setFirstName}
                 />
                 <TextInput
                   style={[styles.input, styles.nameInput]}
-                  placeholder="Middle Name"
+                  placeholder={t("Middle Name")}
                   value={middleName}
                   onChangeText={setMiddleName}
                 />
                 <TextInput
                   style={[styles.input, styles.nameInput]}
-                  placeholder="Last Name"
+                  placeholder={t("Last Name")}
                   value={lastName}
                   onChangeText={setLastName}
                 />
@@ -314,14 +316,14 @@ setLoading(true)
 
               <TextInput
                 style={styles.input}
-                placeholder="Your skills/Qualifications"
+                placeholder={t("Your skills/Qualifications")}
                 value={jobType}
                 onChangeText={setJobType}
               />
 
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="Explain why someone should hire you"
+                placeholder={t("Explain why someone should hire you")}
                 value={briefWhy}
                 onChangeText={setBriefWhy}
                 multiline
@@ -330,7 +332,7 @@ setLoading(true)
 
               <TextInput
                 style={styles.input}
-                placeholder="State your experience in the sector (e.g 5 Years)"
+                placeholder={t("State your experience in the sector")}
                 keyboardType="numeric"
                 value={yearsExperience}
                 onChangeText={setYearsExperience}
@@ -338,7 +340,7 @@ setLoading(true)
 
               <TextInput
                 style={styles.input}
-                placeholder="Enter e-mail(Optional)"
+                placeholder={t("Enter e-mail(Optional)")}
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
@@ -346,14 +348,14 @@ setLoading(true)
 
               <TextInput
                 style={styles.input}
-                placeholder="Enter Phone (+237 687876765)"
+                placeholder={t("Enter Phone (+237 687876765)")}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
               />
 
               <View style={styles.genderContainer}>
-                <Text style={styles.genderLabel}>Gender:</Text>
+                <Text style={styles.genderLabel}>{t("Gender")}:</Text>
                 <View style={styles.genderOptions}>
                   {["Male", "Female", "Other"].map((genderOption) => (
                     <TouchableOpacity
@@ -371,7 +373,7 @@ setLoading(true)
                             styles.genderButtonTextSelected,
                         ]}
                       >
-                        {genderOption}
+                        {t(genderOption)}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -379,10 +381,9 @@ setLoading(true)
               </View>
 
               <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>Upload Documents</Text>
+                <Text style={styles.sectionTitle}>{t("Upload Documents")}</Text>
                 <Text style={styles.imageHelperText}>
-                  Upload your resume, CV, or other relevant documents (Max 5
-                  images)
+                  {t("Upload your resume, CV, or other relevant documents (Max 5 images)")}
                 </Text>
 
                 {selectedImageUris.length + images.length < 5 && (
@@ -414,7 +415,7 @@ setLoading(true)
                   
                 ) : (
                   <Text style={styles.submitButtonText}>
-                    Submit Application
+                    {t("Submit Application")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -428,25 +429,25 @@ setLoading(true)
             <View style={styles.formContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Job Title"
+                placeholder={t("Job Title")}
                 value={jobTitle}
                 onChangeText={setJobTitle}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Company Name"
+                placeholder={t("Company Name")}
                 value={companyName}
                 onChangeText={setCompanyName}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Location"
+                placeholder={t("Location")}
                 value={location}
                 onChangeText={setLocation}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Salary"
+                placeholder={t("Salary")}
                 value={salary}
                 onChangeText={setSalary}
                 keyboardType="numeric"
@@ -454,21 +455,21 @@ setLoading(true)
 
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="Job Description"
+                placeholder={t("Job Description")}
                 value={description}
                 onChangeText={setDescription}
                 multiline
                 numberOfLines={4}
               />
               <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>Upload Job Images</Text>
+                <Text style={styles.sectionTitle}>{t("Upload Job Images")}</Text>
                 {selectedImageUris.length + images.length < 5 && (
                   <TouchableOpacity
                     style={styles.uploadButton}
                     onPress={pickImage}
                   >
                     <Text style={styles.uploadButtonText}>
-                      Upload Images ({selectedImageUris.length + images.length}
+                      {t("Upload Images")} ({selectedImageUris.length + images.length}
                       /5)
                     </Text>
                   </TouchableOpacity>
@@ -520,7 +521,7 @@ setLoading(true)
               {loadingcreate ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.submitButtonText}>Create Job</Text>
+                <Text style={styles.submitButtonText}>{t("Create Job")}</Text>
               )}
             </TouchableOpacity> 
             </View>
@@ -551,7 +552,7 @@ setLoading(true)
               ]}
               onPress={setAllCategory}
             >
-              <Text style={styles.buttonText}>All Jobs</Text>
+              <Text style={styles.buttonText}>{t("All Jobs")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -560,7 +561,7 @@ setLoading(true)
               ]}
               onPress={setJobSeekersCategory}
             >
-              <Text style={styles.buttonText}>Job Seekers</Text>
+              <Text style={styles.buttonText}>{t("Job Seekers")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -568,8 +569,8 @@ setLoading(true)
             style={styles.searchBar}
             placeholder={
               categorystate === "All Jobs"
-                ? "Search job titles and descriptions..."
-                : "Search job types and descriptions..."
+                ? t("Search job titles and descriptions")
+                : t("Search job types and descriptions")
             }
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -651,7 +652,7 @@ setLoading(true)
               borderRadius: 10,
             }}
           >
-            <Text style={{ fontWeight: "500" }}>Brief Description</Text>
+            <Text style={{ fontWeight: "500" }}>{t("Brief Description")}</Text>
             <Text style={styles.briefWhy} numberOfLines={4}>
               {item.description}
             </Text>
@@ -672,7 +673,7 @@ setLoading(true)
                 borderRadius: 10,
               }}
             >
-              <Text style={{ color: "white" }}>Apply Now</Text>
+              <Text style={{ color: "white" }}>{t("Apply Now")}</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -732,9 +733,9 @@ setLoading(true)
               borderRadius: 10,
             }}
           >
-            <Text style={{ fontWeight: "500" }}>Brief Description</Text>
+            <Text style={{ fontWeight: "500" }}>{t("Brief Description")}</Text>
             <Text style={styles.briefWhy} numberOfLines={4}>
-              Why You Should Hire Me: {item.briefWhy}
+              {t("Why You Should Hire Me")}: {item.briefWhy}
             </Text>
           </View>
           <View
@@ -759,7 +760,7 @@ setLoading(true)
                 setSelectedItem(item);
               }}
             >
-              <Text style={{ color: "white" }}>View Details</Text>
+              <Text style={{ color: "white" }}>{t("View Details")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{
@@ -768,7 +769,7 @@ setLoading(true)
                 borderRadius: 10,
               }}
             >
-              <Text style={{ color: "white" }}>Hire</Text>
+              <Text style={{ color: "white" }}>{t("Hire")}</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -804,7 +805,7 @@ setLoading(true)
             style={{ alignSelf: "center" }}
           />
         </TouchableOpacity>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>{t(title)}</Text>
       </View>
 
       {id === "3" ? (
@@ -826,7 +827,7 @@ setLoading(true)
                 ListEmptyComponent={() => (
                   <View style={styles.emptyStateContainer}>
                     <Text style={styles.emptyStateText}>
-                      No results found for "{searchQuery}"
+                      {t("No results for")} "{searchQuery}"
                     </Text>
                     <View></View>
                   </View>

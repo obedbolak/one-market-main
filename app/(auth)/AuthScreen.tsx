@@ -24,6 +24,7 @@ import PhoneField from "../components/PhoneField";
 
 // Import auth context
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import axios from "axios";
 import { TextInput } from "react-native-paper";
 import OTPField from "../components/OTPField";
@@ -31,6 +32,7 @@ import OTPField from "../components/OTPField";
 const AuthScreen = () => {
   // Get mode from navigation params
   const { mode } = useLocalSearchParams<{ mode?: "signin" | "signup" }>();
+  const {t, changeLanguage} = useLanguage();
   const [otp, setOtp] = useState("");
   const [currentOtp, setCurrentOtp] = useState("");
   const [error, setError] = useState("");
@@ -252,6 +254,47 @@ const AuthScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+     <View style={{ flexDirection: "row", justifyContent: "flex-end", padding: 16, gap: 3 }}>
+  <TouchableOpacity
+    onPress={() => changeLanguage("en")}
+    style={{
+      backgroundColor: "#f3f4f6",
+      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: "#d1d5db",
+      marginRight: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 2,
+      elevation: 2,
+    }}
+    activeOpacity={0.85}
+  >
+    <Text style={{ color: "#1d4ed8", fontWeight: "bold", letterSpacing: 1 }}>EN</Text>
+  </TouchableOpacity>
+  <TouchableOpacity
+    onPress={() => changeLanguage("fr")}
+    style={{
+      backgroundColor: "#f3f4f6",
+      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: "#d1d5db",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 2,
+      elevation: 2,
+    }}
+    activeOpacity={0.85}
+  >
+    <Text style={{ color: "#1d4ed8", fontWeight: "bold", letterSpacing: 1 }}>FR</Text>
+  </TouchableOpacity>
+</View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoidingView}
@@ -278,20 +321,20 @@ const AuthScreen = () => {
             />
 
             {isForgotPassword ? (<>
-            <Text style={styles.title}>Forgot Password</Text>
+            <Text style={styles.title}>{t("Forgot Password")}</Text>
             <Text style={styles.title}>
-              Enter your Phone number to reset your password
+              {t("Enter your Phone number to reset your password")}
             </Text>
 
             <PhoneField
-              label="Phone"
-              placeholder="Enter your phone number"
-              helperText="Enter your phone number used to register" 
+              label={t("Phone")}
+              placeholder={t("Enter your phone number")}
+              helperText={t("Enter your phone number used to register")}
               value={phone}
               onChangeText={setPhone}
             />
             <TextInput
-              label="New Password"
+              label={t("New Password")}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
@@ -303,7 +346,7 @@ const AuthScreen = () => {
               style={{ marginBottom: 10 }}
             />
             <TextInput
-              label="Confirm Password"
+              label={t("Confirm Password")}
               value={confirmPassword}
               onChangeText={(text) => {
                 setConfirmPassword(text);
@@ -315,10 +358,10 @@ const AuthScreen = () => {
               style={{ marginBottom: 10 }}
             />
             {confirmPassword.length > 0  && password === confirmPassword ? (
-  <Text style={{ color: "green", marginBottom: 10 }}>Password correct</Text>
+  <Text style={{ color: "green", marginBottom: 10 }}>{t("Password correct")}</Text>
 ) : null}
 {confirmPassword.length > 0 && confirmPasswordError && password !== confirmPassword? (
-  <Text style={{ color: "red", marginBottom: 10 }}>{confirmPasswordError}</Text>
+  <Text style={{ color: "red", marginBottom: 10 }}>{t(confirmPasswordError)}</Text>
 ) :null}
             <TouchableOpacity
               onPress={() => {
@@ -334,7 +377,7 @@ const AuthScreen = () => {
                 borderRadius: 5,
               }}  
             >
-              <Text style={{ color: "white" }}>Reset Password</Text>
+              <Text style={{ color: "white" }}>{t("Reset Password")}</Text>
             </TouchableOpacity>
 
             </>):
@@ -355,24 +398,24 @@ const AuthScreen = () => {
             ) : (
               <>
                 <Text style={styles.title}>
-                  {isSignIn ? "Sign In" : "Sign Up"}
+                  {isSignIn ? t("Sign In") : t("Sign Up")}
                 </Text>
                 
                 {isEmailMode ? (
                   <EmailField
-                    label={isSignIn ? "Email" : "Email Address"}
+                    label={isSignIn ? t("Email") : t("Email Address")}
                     helperText={
-                      isSignIn ? "Enter your email" : "Enter your email address"
+                      isSignIn ? t("Enter your email") : t("Enter your email address")
                     }
-                    placeholder="example@example.com"
+                    placeholder={t("example@example.com")}
                     clearButtonVisible={true}
                     onChangeText={setEmail}
                   />
                 ) : (
                   <PhoneField
-                    label={isSignIn ? "Phone" : "Phone Number"}
+                    label={isSignIn ? t("Phone") : t("Phone Number")}
                     placeholder={
-                      isSignIn ? "Enter your phone" : "Enter your phone number"
+                      isSignIn ? t("Enter your phone") : t("Enter your phone number")
                     }
                     value={phone}
                     onChangeText={setPhone}
@@ -381,16 +424,16 @@ const AuthScreen = () => {
                 
                 {!isSignIn && (
                   <FullNameField
-                    label="Full Name"
-                    placeholder="Enter your full name"
+                    label={t("Full Name")}
+                    placeholder={t("Enter your full name")}
                     onChangeText={setName}
                   />
                 )}
                 
                 <PasswordField
-                  label="Password"
+                  label={t("Password")}
                   placeholder={
-                    isSignIn ? "Enter your password" : "Create a password"
+                    isSignIn ? t("Enter your password") : t("Create a password")
                   }
                   onChangeText={setPassword}
                 />
@@ -436,11 +479,11 @@ const AuthScreen = () => {
                       <View>
                         <ActivityIndicator size="small" color="#fff" />
                         <Text style={{ color: "white" }}>
-                          {isSignIn ? "Signing In..." : "Signing Up..."}
+                          {isSignIn ? t("Signing In...") : t("Signing Up...")}
                         </Text>
                       </View>
                     ) : (
-                      <>{isSignIn ? "Sign In" : "Sign Up"}</>
+                      <>{isSignIn ? t("Sign In") : t("Sign Up")}</>
                     )}
                   </Text>
                 </CustomButton>
@@ -458,11 +501,11 @@ const AuthScreen = () => {
                     <View>
                       <ActivityIndicator size="small" color="#fff" />
                       <Text style={{ color: "white" }}>
-                        Logging in, Please Wait!
+                        {t("Logging in, Please Wait!")}
                       </Text>
                     </View>
                   ) : (
-                    <>{isSignIn ? "Sign In" : "Sign Up"}</>
+                    <>{isSignIn ? t("Sign In") : t("Sign Up")}</>
                   )}
                 </Text>
               </CustomButton>
@@ -471,12 +514,12 @@ const AuthScreen = () => {
             <View style={styles.row}>
               <Text>
                 {isSignIn
-                  ? "Don't have an account? "
-                  : "Already have an account? "}
+                  ? t("Don't have an account? ")
+                  : t("Already have an account? ")}
               </Text>
               <TouchableOpacity onPress={() => setIsSignIn(!isSignIn)}>
                 <Text style={styles.link}>
-                  {isSignIn ? "Sign Up" : "Sign In"}
+                  {isSignIn ? t("Sign Up") : t("Sign In")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -490,15 +533,15 @@ const AuthScreen = () => {
               >
                 <Text style={styles.link}>
                   {isForgotPassword
-                    ? "Back to Sign In"
-                    : "Forgot Password?"}
+                    ? t("Back to Sign In")
+                    : t("Forgot Password?")}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.separatorContainer}>
               <View style={styles.separator} />
-              <Text style={styles.orText}>or</Text>
+              <Text style={styles.orText}>{t("or")}</Text>
               <View style={styles.separator} />
             </View>
 
@@ -537,10 +580,10 @@ const AuthScreen = () => {
               }}
             >
               <Text style={{ fontSize: 12, color: "#6b6b6b" }}>
-                By {isSignIn ? "signing in" : "signing up"}, you agree to our
+                {t("By")} {isSignIn ? t("signing in") : t("signing up")},{t("you agree to our")}
               </Text>
               <TouchableOpacity>
-                <Text style={styles.link}>Terms and Conditions</Text>
+                <Text style={styles.link}>{t("Terms and Conditions")}</Text>
               </TouchableOpacity>
             </View>
           </View>
